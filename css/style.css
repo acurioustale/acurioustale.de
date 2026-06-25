@@ -19,14 +19,15 @@
   --prompt: light-dark(#0f6e56, #5dcaa5);
   --cmd: light-dark(#3b6d11, #c0dd97);
   --name: light-dark(#0f6e56, #9fe1cb);
-  --label: light-dark(#0f6e56, #5dcaa5);
+  /* Field labels share the prompt's green in both schemes. */
+  --label: var(--prompt);
   --link: light-dark(#185fa5, #85b7eb);
 
   /* Theme-independent. */
   --accent: #1d9e75;
   --dot-red: #e24b4a;
   --dot-amber: #ef9f27;
-  --dot-green: #1d9e75;
+  --dot-green: var(--accent);
 }
 
 /* The toggle's explicit override: force one scheme, which steers every
