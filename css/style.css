@@ -1,6 +1,7 @@
 @charset "utf-8";
 
 :root {
+	color-scheme: dark;
 	--page-bg: #0e0f10;
 	--term-bg: #1b1d1e;
 	--term-bar: #242728;
@@ -19,8 +20,11 @@
 	--dot-green: #1d9e75;
 }
 
+/* Light palette. Applied either from the OS preference (when the visitor
+   hasn't picked a theme) or from the explicit toggle. Keep both blocks in sync. */
 @media (prefers-color-scheme: light) {
-	:root {
+	:root:not([data-theme="dark"]) {
+		color-scheme: light;
 		--page-bg: #e8e6df;
 		--term-bg: #ffffff;
 		--term-bar: #efede6;
@@ -35,6 +39,23 @@
 		--link: #185fa5;
 		--accent: #1d9e75;
 	}
+}
+
+:root[data-theme="light"] {
+	color-scheme: light;
+	--page-bg: #e8e6df;
+	--term-bg: #ffffff;
+	--term-bar: #efede6;
+	--term-border: #d3d1c7;
+	--fg: #2c2c2a;
+	--muted: #76756f;
+	--rule: #b4b2a9;
+	--prompt: #0f6e56;
+	--cmd: #3b6d11;
+	--name: #0f6e56;
+	--label: #0f6e56;
+	--link: #185fa5;
+	--accent: #1d9e75;
 }
 
 * {
@@ -98,6 +119,24 @@ body {
 	margin-left: 6px;
 	font-size: 12.5px;
 	color: var(--muted);
+}
+
+.theme-toggle {
+	margin-left: auto;
+	padding: 0 4px;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+	color: var(--accent);
+	outline: none;
 }
 
 .screen {
