@@ -10,14 +10,15 @@ progressive enhancement — without JavaScript the OS `prefers-color-scheme` sti
 drives the colours via CSS and no dead control is shown. The chosen theme is
 persisted in `localStorage`.
 
-```
+```text
 .
 ├── index.html          ← the page (markup + inline theme scripts)
 ├── css/style.css       ← terminal styling, light/dark via CSS custom properties
 ├── assets/             ← favicon, apple-touch icon, Open Graph share image
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
 ├── lychee.toml         ← link-checker config (used by the links workflow)
-├── validate.sh         ← run the CI checks locally (vnu, prettier, shell, workflows)
+├── package.json        ← npm-only lint tools (ESLint, markdownlint-cli2)
+├── validate.sh         ← run the CI checks locally (vnu, prettier, shell, JS, md)
 └── deploy.sh           ← rsync deploy to the web host
 ```
 
@@ -35,6 +36,7 @@ formatting). Install the tools once, then run the script:
 
 ```bash
 brew install vnu prettier shellcheck shfmt actionlint   # one-time
+npm install                                             # one-time (ESLint, markdownlint-cli2)
 ./validate.sh
 ```
 
@@ -61,7 +63,8 @@ Pushing to `main` deploys automatically. The
 [`deploy` workflow](.github/workflows/deploy.yml) first validates the HTML, CSS
 and SVG with the [Nu Html Checker](https://validator.github.io/validator/),
 checks formatting with Prettier, lints the shell scripts with ShellCheck and
-shfmt, and lints the workflows with actionlint, then runs `deploy.sh` only if
+shfmt, lints the workflows with actionlint, and lints the inline JS and the
+Markdown with ESLint and markdownlint-cli2, then runs `deploy.sh` only if
 everything passes. It runs on every push to `main` (and can be triggered manually
 from the Actions tab); pull requests run the same checks without deploying. Link
 checking runs separately (see Development) so flaky external hosts never block a
@@ -70,7 +73,7 @@ deploy.
 `deploy.sh` is an `rsync -avz --delete` of `index.html`, `css/` and `assets/` to
 the web root on the host:
 
-```
+```text
 web4186@http2.core-networks.de:html/acurioustale.de/
 ```
 

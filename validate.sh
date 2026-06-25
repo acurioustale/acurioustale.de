@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Local pre-push checks, mirroring the CI "validate" job:
-#   1. W3C Nu Html Checker (vnu) over the HTML, CSS and SVG
-#   2. Prettier formatting check
+# Local pre-push checks, mirroring the CI "validate" job: vnu (HTML/CSS/SVG),
+# Prettier formatting, ShellCheck + shfmt, actionlint, and ESLint + markdownlint.
 # Usage: ./validate.sh
 #
-# Install the tools once with: brew install vnu prettier
+# Install the tools once with: brew install vnu prettier shellcheck shfmt actionlint
+# and `npm install` (for ESLint and markdownlint-cli2).
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Select files by extension, exactly like the CI job — never hand vnu the
-# assets/ directory, or it will try to parse the binary PNGs as text.
-files=$(find . -path ./.git -prune -o \
+# Select files by extension, exactly like the CI job — prune .git and
+# node_modules, and never hand vnu the assets/ dir (it parses PNGs as text).
+files=$(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
 	\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
 
 echo "==> Validating HTML, CSS and SVG (vnu)"
@@ -33,5 +33,8 @@ shfmt -d deploy.sh validate.sh
 
 echo "==> Linting workflows (actionlint)"
 actionlint
+
+echo "==> Linting JS and Markdown (eslint, markdownlint-cli2)"
+npm run --silent lint
 
 echo "==> All checks passed"
