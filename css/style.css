@@ -261,6 +261,9 @@ a:focus-visible {
    the only cursor in every state — focusing the field doesn't swap its look. */
 .cmd-input {
   width: 0;
+  /* Cap growth at the screen width so a very long line scrolls inside the
+     field instead of forcing a horizontal scrollbar on .screen. */
+  max-width: 100%;
   margin: 0;
   padding: 0;
   border: 0;
