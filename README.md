@@ -50,3 +50,7 @@ secrets `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. To deploy by hand instead
 
 The `--delete` flag mirrors the local tree to the server, so anything in the web
 root that isn't tracked here is removed on deploy.
+
+## License
+
+[MIT](LICENSE) © Markus Spitzner
