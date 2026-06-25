@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Local pre-push checks, mirroring the CI "validate" job: vnu (HTML/CSS/SVG),
-# Prettier formatting, ShellCheck + shfmt, actionlint, and ESLint + markdownlint.
+# Prettier formatting, svgo (SVG), ShellCheck + shfmt, actionlint, and
+# ESLint (JS + JSON) + markdownlint.
 # Usage: ./validate.sh
 #
 # Install the tools once with: brew install vnu prettier shellcheck shfmt actionlint
@@ -24,6 +25,15 @@ vnu --filterpattern '.*Trailing slash on void elements.*' \
 
 echo "==> Checking formatting (prettier)"
 prettier --check .
+
+echo "==> Checking SVG optimisation (svgo)"
+for f in assets/favicon.svg og-image.src.svg; do
+	npx svgo --config svgo.config.mjs -i "$f" -o - 2>/dev/null | diff -q - "$f" >/dev/null ||
+		{
+			echo "  $f is not optimised; run: npx svgo --config svgo.config.mjs $f"
+			exit 1
+		}
+done
 
 echo "==> Linting shell scripts (shellcheck)"
 shellcheck deploy.sh validate.sh
