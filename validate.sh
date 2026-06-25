@@ -31,4 +31,7 @@ shellcheck deploy.sh validate.sh
 echo "==> Checking shell formatting (shfmt)"
 shfmt -d deploy.sh validate.sh
 
+echo "==> Linting workflows (actionlint)"
+actionlint
+
 echo "==> All checks passed"

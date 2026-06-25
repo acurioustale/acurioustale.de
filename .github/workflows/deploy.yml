@@ -35,6 +35,8 @@ jobs:
             https://github.com/validator/validator/releases/download/latest/vnu.jar
           files=$(find . -path ./.git -prune -o \
             \( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
+          # $files is intentionally unquoted so each path is a separate argument.
+          # shellcheck disable=SC2086
           java -jar "$RUNNER_TEMP/vnu.jar" \
             --filterpattern '.*Trailing slash on void elements.*' \
             --also-check-css --also-check-svg $files
@@ -57,6 +59,15 @@ jobs:
             https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_amd64
           chmod +x "$RUNNER_TEMP/shfmt"
           "$RUNNER_TEMP/shfmt" -d deploy.sh validate.sh
+
+      # actionlint validates the workflow itself and runs ShellCheck over the
+      # embedded run scripts. Pinned static binary, no repo dependencies.
+      - name: Lint workflows (actionlint)
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/actionlint.tar.gz" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
 
   deploy:
     needs: validate

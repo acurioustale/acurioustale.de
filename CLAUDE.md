@@ -17,12 +17,14 @@ python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
 ```
 
 There is no build step — edit the files and reload the browser. CI validates the
-HTML, CSS and SVG (Nu Html Checker), checks formatting (Prettier) and lints the
-shell scripts (ShellCheck and shfmt) on every push and pull request, and deploys
-are gated on all of them passing. Run the same checks locally with `./validate.sh`
-(needs `brew install vnu prettier shellcheck shfmt`). Prettier uses its defaults;
-keep the Prettier and shfmt versions in `deploy.yml` in sync with what you run
-locally.
+HTML, CSS and SVG (Nu Html Checker), checks formatting (Prettier), lints the
+shell scripts (ShellCheck and shfmt) and lints the workflows (actionlint) on
+every push and pull request, and deploys are gated on all of them passing. Run
+the same checks locally with `./validate.sh` (needs
+`brew install vnu prettier shellcheck shfmt actionlint`). Link checking is
+separate and non-gating — the `links` workflow runs lychee on pull requests and a
+weekly schedule. Prettier uses its defaults; keep the Prettier, shfmt and
+actionlint versions in `deploy.yml` in sync with what you run locally.
 `.claude/launch.json` defines a "site" launch config that serves on port 4174.
 
 ## Theme system (the one piece of real logic)
