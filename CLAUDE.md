@@ -16,7 +16,11 @@ python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
 ./deploy.sh --dry-run         # preview what the deploy would change
 ```
 
-There is no build, lint, or test step — edit the files and reload the browser.
+There is no build step — edit the files and reload the browser. CI validates the
+HTML, CSS and SVG (Nu Html Checker) and checks formatting (Prettier) on every
+push and pull request, and deploys are gated on both passing. Run the same checks
+locally with `./validate.sh` (needs `brew install vnu prettier`). Prettier uses
+its defaults; keep the version in `deploy.yml` in sync with what you run locally.
 `.claude/launch.json` defines a "site" launch config that serves on port 4174.
 
 ## Theme system (the one piece of real logic)
@@ -46,8 +50,8 @@ attribute on `<html>`.
 ## Deployment
 
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
-`deploy.sh` (an `rsync -avz --delete` of `index.html` and `css/`). CI authenticates
-with the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
+`deploy.sh` (an `rsync -avz --delete` of `index.html`, `css/` and `assets/`). CI
+authenticates with the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
 
 The `TARGET` in `deploy.sh` **must keep its trailing slash** (`html/acurioustale.de/`).
 The deploy key is jailed server-side to a forced `rsync` command that matches that
