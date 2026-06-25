@@ -1,0 +1,14 @@
+/* TEAM */
+
+Markus Spitzner
+Contact: me [at] acurioustale.de
+GitHub: @acurioustale
+Location: Cork, Ireland
+
+/* SITE */
+
+Last update: 2026-06-25
+Language: English
+Standards: HTML5, CSS
+Components: None - no framework, no build step, zero runtime dependencies
+Software: A text editor and a curious mind
