@@ -40,8 +40,15 @@ web4186@http2.core-networks.de:html/acurioustale.de/
 ```
 
 CI authenticates with a dedicated SSH deploy key, stored as the repository
-secrets `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. To deploy by hand instead
-(uses your own SSH access), run:
+secrets `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. The key is harmless if
+leaked: on the host it's pinned to a forced command
+(`~web4186/bin/rsync-jail-acurioustale.sh`, wired up in that account's
+`authorized_keys`) that allows only an rsync *push* into
+`html/acurioustale.de/` — no shell, no pull, and no path traversal outside that
+directory. This is why the deploy target in `deploy.sh` must keep its trailing
+slash; the jail matches on that exact prefix.
+
+To deploy by hand instead (uses your own SSH access), run:
 
 ```bash
 ./deploy.sh            # live
