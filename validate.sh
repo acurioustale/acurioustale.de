@@ -28,7 +28,7 @@ prettier --check .
 
 echo "==> Checking SVG optimisation (svgo)"
 for f in assets/favicon.svg og-image.src.svg; do
-	npx svgo --config svgo.config.mjs -i "$f" -o - 2>/dev/null | diff -q - "$f" >/dev/null ||
+	npx svgo --config svgo.config.mjs -i "$f" -o - | diff -q - "$f" >/dev/null ||
 		{
 			echo "  $f is not optimised; run: npx svgo --config svgo.config.mjs $f"
 			exit 1

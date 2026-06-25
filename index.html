@@ -38,6 +38,7 @@
       property="og:image"
       content="https://acurioustale.de/assets/og-image.png"
     />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
@@ -63,6 +64,7 @@
         "name": "Markus Spitzner",
         "url": "https://acurioustale.de/",
         "email": "mailto:me@acurioustale.de",
+        "telephone": "+353894825989",
         "jobTitle": "CSA",
         "address": {
           "@type": "PostalAddress",
@@ -287,8 +289,11 @@
         // that looks like a path → no such file, otherwise command not found.
         function reply(cmd) {
           var argv = cmd.split(/\s+/);
-          var PRIV = { sudo: 1, su: 1, doas: 1, chmod: 1, chown: 1 };
-          if (PRIV[argv[0]]) return argv[0] + ": permission denied";
+          // An array, not an object-as-set: a plain object would match inherited
+          // Object.prototype members (toString, constructor, …) as commands.
+          var PRIV = ["sudo", "su", "doas", "chmod", "chown"];
+          if (PRIV.indexOf(argv[0]) !== -1)
+            return argv[0] + ": permission denied";
           if (argv[0] === "ls") {
             if (argv.length < 2) return "ls: .: Permission denied";
             return (
@@ -323,7 +328,18 @@
         // by cloning the original node, so it stays in sync with the page.
         function echoBlock(selector) {
           var node = document.querySelector(selector);
-          if (node) log.appendChild(node.cloneNode(true));
+          if (!node) return;
+          var clone = node.cloneNode(true);
+          // Demote any cloned <h1> so replayed output doesn't add duplicate
+          // top-level headings to the document outline.
+          var heading = clone.querySelector("h1");
+          if (heading) {
+            var p = document.createElement("p");
+            p.className = heading.className;
+            p.textContent = heading.textContent;
+            heading.replaceWith(p);
+          }
+          log.appendChild(clone);
         }
 
         function replyLine(text) {
