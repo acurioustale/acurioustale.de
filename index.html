@@ -41,7 +41,7 @@
                      <dt>github</dt><dd><a href="https://github.com/acurioustale">github.com/acurioustale</a></dd>
                      <dt>linkedin</dt><dd><a href="https://linkedin.com/in/acurioustale">in/acurioustale</a></dd>
                      <dt>email</dt><dd><a href="mailto:me@acurioustale.de">me@acurioustale.de</a></dd>
-                     <dt>mobile</dt><dd><a href="tel:+353894825989">+353&nbsp;(89)&nbsp;4825989</a></dd>
+                     <dt>mobile</dt><dd><a href="tel:+353894825989">+353&nbsp;89&nbsp;482&nbsp;5989</a></dd>
                   </dl>
                </div>
             </div>
@@ -57,15 +57,29 @@
       <script>
          // Inject the theme toggle as progressive enhancement: without JS the
          // OS preference still drives light/dark via CSS, and no dead control shows.
+         // The toggle cycles auto → light → dark; "auto" clears the override and
+         // hands control back to the OS preference.
          (function () {
             var root = document.documentElement;
             var bar = document.querySelector(".titlebar");
             if (!bar) return;
 
-            var mq = window.matchMedia("(prefers-color-scheme: light)");
-            function current() {
+            var STATES = ["auto", "light", "dark"];
+            var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
+
+            // The current explicit override, or "auto" when none is set.
+            function mode() {
                var attr = root.getAttribute("data-theme");
-               return attr ? attr : (mq.matches ? "light" : "dark");
+               return attr === "light" || attr === "dark" ? attr : "auto";
+            }
+
+            function apply(next) {
+               try {
+                  if (next === "auto") localStorage.removeItem("theme");
+                  else localStorage.setItem("theme", next);
+               } catch (e) {}
+               if (next === "auto") root.removeAttribute("data-theme");
+               else root.setAttribute("data-theme", next);
             }
 
             var btn = document.createElement("button");
@@ -73,23 +87,22 @@
             btn.className = "theme-toggle";
 
             function render() {
-               var mode = current();
-               var label = mode === "dark" ? "Switch to light theme" : "Switch to dark theme";
-               btn.textContent = mode === "dark" ? "☼" : "☾";
+               var m = mode();
+               var next = STATES[(STATES.indexOf(m) + 1) % STATES.length];
+               var label = "Theme: " + m + " — switch to " + next;
+               btn.textContent = GLYPH[m];
                btn.setAttribute("aria-label", label);
                btn.title = label;
             }
 
             btn.addEventListener("click", function () {
-               var next = current() === "dark" ? "light" : "dark";
-               root.setAttribute("data-theme", next);
-               try { localStorage.setItem("theme", next); } catch (e) {}
+               apply(STATES[(STATES.indexOf(mode()) + 1) % STATES.length]);
                render();
             });
 
-            // Follow OS changes only while the visitor hasn't set a manual override.
-            mq.addEventListener("change", function () {
-               if (!root.getAttribute("data-theme")) render();
+            // Re-render the glyph on OS changes while in auto mode (it follows the OS).
+            window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () {
+               if (mode() === "auto") render();
             });
 
             bar.appendChild(btn);
