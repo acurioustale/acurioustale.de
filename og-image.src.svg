@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      text { font-family: "Menlo", "SF Mono", monospace; }
+    </style>
+  </defs>
+
+  <!-- page background -->
+  <rect width="1200" height="630" fill="#0e0f10"/>
+
+  <!-- terminal window -->
+  <rect x="110" y="85" width="980" height="460" rx="16" fill="#1b1d1e" stroke="#2c2f30" stroke-width="1"/>
+
+  <!-- titlebar -->
+  <path d="M110 101 a16 16 0 0 1 16 -16 h948 a16 16 0 0 1 16 16 v38 h-980 z" fill="#242728"/>
+  <line x1="110" y1="139" x2="1090" y2="139" stroke="#2c2f30" stroke-width="1"/>
+  <circle cx="146" cy="112" r="7" fill="#e24b4a"/>
+  <circle cx="172" cy="112" r="7" fill="#ef9f27"/>
+  <circle cx="198" cy="112" r="7" fill="#1d9e75"/>
+  <text x="236" y="119" font-size="21" fill="#888780">me@acurioustale.de: ~</text>
+
+  <!-- command line -->
+  <text x="150" y="208" font-size="27"><tspan fill="#5dcaa5">$</tspan><tspan fill="#c0dd97" xml:space="preserve"> ./whoami.sh</tspan></text>
+
+  <!-- ascii art -->
+  <g fill="#1d9e75" font-size="27" xml:space="preserve">
+    <text x="150" y="270"> __  __  ___</text>
+    <text x="150" y="304">|  \/  |/ __|</text>
+    <text x="150" y="338">| |\/| |\__ \</text>
+    <text x="150" y="372">|_|  |_||___/</text>
+  </g>
+
+  <!-- name + fields -->
+  <text x="470" y="278" font-size="40" fill="#9fe1cb">markus spitzner</text>
+  <line x1="470" y1="300" x2="1040" y2="300" stroke="#5f5e5a" stroke-width="1"/>
+
+  <g font-size="23">
+    <text x="470" y="348" fill="#5dcaa5">role</text>
+    <text x="640" y="348" fill="#d3d1c7">csa @ some kind of fruit company</text>
+    <text x="470" y="388" fill="#5dcaa5">location</text>
+    <text x="640" y="388" fill="#d3d1c7">cork, ireland</text>
+    <text x="470" y="428" fill="#5dcaa5">email</text>
+    <text x="640" y="428" fill="#85b7eb">me@acurioustale.de</text>
+  </g>
+
+  <!-- closing prompt with cursor -->
+  <text x="150" y="498" font-size="27" fill="#5dcaa5">$</text>
+  <rect x="173" y="481" width="13" height="24" fill="#9fe1cb"/>
+</svg>

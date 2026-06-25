@@ -7,5 +7,5 @@ REMOTE="web4186@http2.core-networks.de"
 TARGET="html/acurioustale.de/"
 
 rsync -avz --delete "$@" \
-	index.html css \
+	index.html css assets \
 	"${REMOTE}:${TARGET}"
