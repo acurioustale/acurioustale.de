@@ -41,7 +41,12 @@ tooling that lints our own files, so there is no untrusted input. The
 ## Theme system (the one piece of real logic)
 
 Light/dark theming is split across three files and is easy to break if you touch
-only one. The model is three-way: **auto** (follow OS) → **light** → **dark**.
+only one. The model is three-way — **auto** (follow OS), **light** and **dark** —
+and the toggle cycles through all three. Because **auto** always looks like the
+OS preference, one step of any three-way cycle can't change the colour; the cycle
+order is derived from the OS preference so that unavoidable no-op lands on the
+return to **auto**, and every other click visibly flips light/dark (no dead first
+click on a light-mode OS).
 
 - `css/style.css` defines every colour twice in `:root` as `--dark-*` and
   `--light-*` custom properties, then maps one set onto the active `--*`
@@ -51,12 +56,13 @@ only one. The model is three-way: **auto** (follow OS) → **light** → **dark*
   `:root[data-theme="light"]` (explicit toggle). When adding or renaming a
   colour, update the `--dark-*`/`--light-*` definitions **and** both activation
   blocks.
-- `index.html` has two inline scripts. The first (in `<head>`) applies a saved
-  theme from `localStorage` before first paint to avoid a flash. The second (end
-  of `<body>`) injects the toggle button as progressive enhancement — without
-  JS, the OS preference still drives colours via CSS and no dead control is
-  shown. "auto" clears the `data-theme` attribute and the `localStorage` key,
-  handing control back to the OS.
+- `index.html` has three inline scripts; the first two drive theming. The first
+  (in `<head>`) applies a saved theme from `localStorage` before first paint to
+  avoid a flash. The second (end of `<body>`) injects the toggle button as
+  progressive enhancement — without JS, the OS preference still drives colours
+  via CSS and no dead control is shown. "auto" clears the `data-theme` attribute
+  and the `localStorage` key, handing control back to the OS. (The third script
+  is the interactive terminal prompt — an easter egg, unrelated to theming.)
 
 Keep these consistent: the `localStorage` key is `"theme"` with values
 `"light"`/`"dark"` (absent = auto), and the override is the `data-theme`
