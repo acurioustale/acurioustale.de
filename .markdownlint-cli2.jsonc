@@ -1,0 +1,10 @@
+{
+  // Prettier owns formatting, including line wrapping (prose is left unwrapped),
+  // so line-length is not enforced here; every other default rule stays on.
+  "config": {
+    "default": true,
+    "MD013": false,
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules"],
+}
