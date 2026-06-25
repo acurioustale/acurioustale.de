@@ -55,8 +55,9 @@ To deploy by hand instead (uses your own SSH access), run:
 ./deploy.sh --dry-run  # preview what would change
 ```
 
-The `--delete` flag mirrors the local tree to the server, so anything in the web
-root that isn't tracked here is removed on deploy.
+The `--delete` flag keeps the deployed `css/` directory in sync — files removed
+locally are removed on the server too. Only `index.html` and `css/` are pushed,
+so unrelated files elsewhere in the web root are left untouched.
 
 ## License
 
