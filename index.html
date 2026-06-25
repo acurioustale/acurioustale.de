@@ -1,113 +1,215 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-   <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>Markus Spitzner — me@acurioustale.de</title>
-      <meta name="description" content="Markus Spitzner — CSA in Cork, Ireland. Creator of Compare Builds."/>
-      <link href="css/style.css" rel="stylesheet"/>
-      <script>
-         // Apply a saved theme before first paint to avoid a flash.
-         (function () {
-            try {
-               var t = localStorage.getItem("theme");
-               if (t === "light" || t === "dark") {
-                  document.documentElement.setAttribute("data-theme", t);
-               }
-            } catch (e) {}
-         })();
-      </script>
-   </head>
-   <body>
-      <main class="terminal" aria-label="Terminal window: me@acurioustale.de">
-         <div class="titlebar">
-            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="title">me@acurioustale.de: ~</span>
-         </div>
-         <div class="screen">
-            <p class="cmd"><span class="prompt">$</span> <span class="run">./whoami.sh</span></p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Markus Spitzner — me@acurioustale.de</title>
+    <meta
+      name="description"
+      content="Markus Spitzner — CSA in Cork, Ireland. Creator of Compare Builds."
+    />
+    <link rel="canonical" href="https://acurioustale.de/" />
 
-            <div class="whoami">
-               <pre class="ascii" aria-hidden="true"> __  __  ___
+    <!-- Browser UI tint per colour scheme (matches the page background). -->
+    <meta
+      name="theme-color"
+      content="#0e0f10"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#e8e6df"
+      media="(prefers-color-scheme: light)"
+    />
+
+    <!-- Icons. SVG for modern browsers, PNG for iOS home screen. -->
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+
+    <!-- Open Graph / Twitter link previews. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://acurioustale.de/" />
+    <meta property="og:title" content="Markus Spitzner — me@acurioustale.de" />
+    <meta
+      property="og:description"
+      content="Markus Spitzner — CSA in Cork, Ireland. Creator of Compare Builds."
+    />
+    <meta
+      property="og:image"
+      content="https://acurioustale.de/assets/og-image.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Terminal whoami card for Markus Spitzner"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Markus Spitzner — me@acurioustale.de" />
+    <meta
+      name="twitter:description"
+      content="Markus Spitzner — CSA in Cork, Ireland. Creator of Compare Builds."
+    />
+    <meta
+      name="twitter:image"
+      content="https://acurioustale.de/assets/og-image.png"
+    />
+
+    <link href="css/style.css" rel="stylesheet" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Markus Spitzner",
+        "url": "https://acurioustale.de/",
+        "email": "mailto:me@acurioustale.de",
+        "jobTitle": "CSA",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Cork",
+          "addressCountry": "IE"
+        },
+        "sameAs": [
+          "https://github.com/acurioustale",
+          "https://linkedin.com/in/acurioustale"
+        ]
+      }
+    </script>
+    <script>
+      // Apply a saved theme before first paint to avoid a flash.
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t === "light" || t === "dark") {
+            document.documentElement.setAttribute("data-theme", t);
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="terminal" aria-label="Terminal window: me@acurioustale.de">
+      <div class="titlebar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="title">me@acurioustale.de: ~</span>
+      </div>
+      <div class="screen">
+        <p class="cmd">
+          <span class="prompt">$</span> <span class="run">./whoami.sh</span>
+        </p>
+
+        <div class="whoami">
+          <pre class="ascii" aria-hidden="true">
+ __  __  ___
 |  \/  |/ __|
 | |\/| |\__ \
-|_|  |_||___/</pre>
-               <div class="info">
-                  <h1 class="name">markus spitzner</h1>
-                  <hr/>
-                  <dl class="fields">
-                     <dt>role</dt><dd>csa @ <em>some kind of fruit company</em></dd>
-                     <dt>location</dt><dd>cork, ireland</dd>
-                     <dt>github</dt><dd><a href="https://github.com/acurioustale">github.com/acurioustale</a></dd>
-                     <dt>linkedin</dt><dd><a href="https://linkedin.com/in/acurioustale">in/acurioustale</a></dd>
-                     <dt>email</dt><dd><a href="mailto:me@acurioustale.de">me@acurioustale.de</a></dd>
-                     <dt>mobile</dt><dd><a href="tel:+353894825989">+353&nbsp;89&nbsp;482&nbsp;5989</a></dd>
-                  </dl>
-               </div>
-            </div>
+|_|  |_||___/</pre
+          >
+          <div class="info">
+            <h1 class="name">markus spitzner</h1>
+            <hr />
+            <dl class="fields">
+              <dt>role</dt>
+              <dd>csa @ <em>some kind of fruit company</em></dd>
+              <dt>location</dt>
+              <dd>cork, ireland</dd>
+              <dt>github</dt>
+              <dd>
+                <a href="https://github.com/acurioustale"
+                  >github.com/acurioustale</a
+                >
+              </dd>
+              <dt>linkedin</dt>
+              <dd>
+                <a href="https://linkedin.com/in/acurioustale"
+                  >in/acurioustale</a
+                >
+              </dd>
+              <dt>email</dt>
+              <dd>
+                <a href="mailto:me@acurioustale.de">me@acurioustale.de</a>
+              </dd>
+              <dt>mobile</dt>
+              <dd>
+                <a href="tel:+353894825989">+353&nbsp;89&nbsp;482&nbsp;5989</a>
+              </dd>
+            </dl>
+          </div>
+        </div>
 
-            <p class="cmd run-projects"><span class="prompt">$</span> <span class="run">ls projects/</span></p>
-            <ul class="projects">
-               <li><span class="proj">Compare Builds</span> <span class="arrow" aria-hidden="true">→</span> <a href="https://comparebuilds.app">comparebuilds.app</a></li>
-            </ul>
+        <p class="cmd run-projects">
+          <span class="prompt">$</span> <span class="run">ls projects/</span>
+        </p>
+        <ul class="projects">
+          <li>
+            <span class="proj">Compare Builds</span>
+            <span class="arrow" aria-hidden="true">→</span>
+            <a href="https://comparebuilds.app">comparebuilds.app</a>
+          </li>
+        </ul>
 
-            <p class="cmd prompt-last"><span class="prompt">$</span> <span class="cursor" aria-hidden="true"></span></p>
-         </div>
-      </main>
-      <script>
-         // Inject the theme toggle as progressive enhancement: without JS the
-         // OS preference still drives light/dark via CSS, and no dead control shows.
-         // The toggle cycles auto → light → dark; "auto" clears the override and
-         // hands control back to the OS preference.
-         (function () {
-            var root = document.documentElement;
-            var bar = document.querySelector(".titlebar");
-            if (!bar) return;
+        <p class="cmd prompt-last">
+          <span class="prompt">$</span>
+          <span class="cursor" aria-hidden="true"></span>
+        </p>
+      </div>
+    </main>
+    <script>
+      // Inject the theme toggle as progressive enhancement: without JS the
+      // OS preference still drives light/dark via CSS, and no dead control shows.
+      // The toggle cycles auto → light → dark; "auto" clears the override and
+      // hands control back to the OS preference.
+      (function () {
+        var root = document.documentElement;
+        var bar = document.querySelector(".titlebar");
+        if (!bar) return;
 
-            var STATES = ["auto", "light", "dark"];
-            var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
+        var STATES = ["auto", "light", "dark"];
+        var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
 
-            // The current explicit override, or "auto" when none is set.
-            function mode() {
-               var attr = root.getAttribute("data-theme");
-               return attr === "light" || attr === "dark" ? attr : "auto";
-            }
+        // The current explicit override, or "auto" when none is set.
+        function mode() {
+          var attr = root.getAttribute("data-theme");
+          return attr === "light" || attr === "dark" ? attr : "auto";
+        }
 
-            function apply(next) {
-               try {
-                  if (next === "auto") localStorage.removeItem("theme");
-                  else localStorage.setItem("theme", next);
-               } catch (e) {}
-               if (next === "auto") root.removeAttribute("data-theme");
-               else root.setAttribute("data-theme", next);
-            }
+        function apply(next) {
+          try {
+            if (next === "auto") localStorage.removeItem("theme");
+            else localStorage.setItem("theme", next);
+          } catch (e) {}
+          if (next === "auto") root.removeAttribute("data-theme");
+          else root.setAttribute("data-theme", next);
+        }
 
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "theme-toggle";
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "theme-toggle";
 
-            function render() {
-               var m = mode();
-               var next = STATES[(STATES.indexOf(m) + 1) % STATES.length];
-               var label = "Theme: " + m + " — switch to " + next;
-               btn.textContent = GLYPH[m];
-               btn.setAttribute("aria-label", label);
-               btn.title = label;
-            }
+        function render() {
+          var m = mode();
+          var next = STATES[(STATES.indexOf(m) + 1) % STATES.length];
+          var label = "Theme: " + m + " — switch to " + next;
+          btn.textContent = GLYPH[m];
+          btn.setAttribute("aria-label", label);
+          btn.title = label;
+        }
 
-            btn.addEventListener("click", function () {
-               apply(STATES[(STATES.indexOf(mode()) + 1) % STATES.length]);
-               render();
-            });
+        btn.addEventListener("click", function () {
+          apply(STATES[(STATES.indexOf(mode()) + 1) % STATES.length]);
+          render();
+        });
 
-            // Re-render the glyph on OS changes while in auto mode (it follows the OS).
-            window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () {
-               if (mode() === "auto") render();
-            });
+        // Re-render the glyph on OS changes while in auto mode (it follows the OS).
+        window
+          .matchMedia("(prefers-color-scheme: light)")
+          .addEventListener("change", function () {
+            if (mode() === "auto") render();
+          });
 
-            bar.appendChild(btn);
-            render();
-         })();
-      </script>
-   </body>
+        bar.appendChild(btn);
+        render();
+      })();
+    </script>
+  </body>
 </html>
