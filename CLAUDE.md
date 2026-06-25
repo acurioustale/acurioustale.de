@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The personal landing page for [acurioustale.de](https://acurioustale.de): a single
 static `index.html` styled as a terminal "whoami" card, with one stylesheet. No
-framework, no build step, no dependencies.
+framework and no build step; the deployed site ships no dependencies (the only npm
+packages are dev-time linters, see below).
 
 ## Commands
 
