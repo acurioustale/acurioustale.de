@@ -73,10 +73,18 @@ jobs:
           tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
-      # ESLint (inline JS in index.html) and markdownlint-cli2, pinned via the
-      # committed package-lock.json so CI matches local installs.
-      - name: Lint JS and Markdown
+      # ESLint (inline JS in index.html, plus JSON via @eslint/json) and
+      # markdownlint-cli2, pinned via the committed package-lock.json.
+      - name: Lint JS, JSON and Markdown
         run: npm run lint
+
+      # svgo keeps the SVGs optimised; the check fails if either would change.
+      - name: Check SVG optimisation
+        run: |
+          for f in assets/favicon.svg og-image.src.svg; do
+            npx svgo --config svgo.config.mjs -i "$f" -o - | diff -q - "$f" \
+              || { echo "$f is not optimised"; exit 1; }
+          done
 
   deploy:
     needs: validate

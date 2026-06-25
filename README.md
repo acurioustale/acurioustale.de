@@ -62,10 +62,10 @@ headless tools without a proper font stack drop the text.
 Pushing to `main` deploys automatically. The
 [`deploy` workflow](.github/workflows/deploy.yml) first validates the HTML, CSS
 and SVG with the [Nu Html Checker](https://validator.github.io/validator/),
-checks formatting with Prettier, lints the shell scripts with ShellCheck and
-shfmt, lints the workflows with actionlint, and lints the inline JS and the
-Markdown with ESLint and markdownlint-cli2, then runs `deploy.sh` only if
-everything passes. It runs on every push to `main` (and can be triggered manually
+checks formatting with Prettier, keeps the SVGs optimised with svgo, lints the
+shell scripts with ShellCheck and shfmt, lints the workflows with actionlint, and
+lints the inline JS, the JSON and the Markdown with ESLint and markdownlint-cli2,
+then runs `deploy.sh` only if everything passes. It runs on every push to `main` (and can be triggered manually
 from the Actions tab); pull requests run the same checks without deploying. Link
 checking runs separately (see Development) so flaky external hosts never block a
 deploy.
