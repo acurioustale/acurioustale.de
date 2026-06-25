@@ -48,6 +48,16 @@ jobs:
       - name: Check formatting (Prettier)
         run: npx prettier@3.8.3 --check .
 
+      # shellcheck is preinstalled on ubuntu-latest; shfmt we fetch as a pinned
+      # static binary so CI matches what developers run locally.
+      - name: Lint and format-check shell scripts
+        run: |
+          shellcheck deploy.sh validate.sh
+          curl -sSL -o "$RUNNER_TEMP/shfmt" \
+            https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_amd64
+          chmod +x "$RUNNER_TEMP/shfmt"
+          "$RUNNER_TEMP/shfmt" -d deploy.sh validate.sh
+
   deploy:
     needs: validate
     if: github.event_name != 'pull_request'

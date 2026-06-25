@@ -33,7 +33,7 @@ Before pushing, run the same checks CI runs (HTML/CSS/SVG validation and
 formatting). Install the tools once, then run the script:
 
 ```bash
-brew install vnu prettier   # one-time
+brew install vnu prettier shellcheck shfmt   # one-time
 ./validate.sh
 ```
 
@@ -49,10 +49,11 @@ headless tools without a proper font stack drop the text.
 
 Pushing to `main` deploys automatically. The
 [`deploy` workflow](.github/workflows/deploy.yml) first validates the HTML, CSS
-and SVG with the [Nu Html Checker](https://validator.github.io/validator/) and
-checks formatting with Prettier, then runs `deploy.sh` only if both pass. It runs
-on every push to `main` (and can be triggered manually from the Actions tab);
-pull requests run the same checks without deploying.
+and SVG with the [Nu Html Checker](https://validator.github.io/validator/),
+checks formatting with Prettier, and lints the shell scripts with ShellCheck and
+shfmt, then runs `deploy.sh` only if everything passes. It runs on every push to
+`main` (and can be triggered manually from the Actions tab); pull requests run
+the same checks without deploying.
 
 `deploy.sh` is an `rsync -avz --delete` of `index.html`, `css/` and `assets/` to
 the web root on the host:
