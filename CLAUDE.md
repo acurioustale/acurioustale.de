@@ -75,8 +75,9 @@ attribute on `<html>`.
 ## Deployment
 
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
-`deploy.sh` (an `rsync -avz --delete` of `index.html`, `css/` and `assets/`). CI
-authenticates with the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
+`deploy.sh` (an `rsync -avz --delete` of `index.html`, `robots.txt`,
+`sitemap.xml`, `humans.txt`, `css/` and `assets/`). CI authenticates with the
+`DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
 
 The `TARGET` in `deploy.sh` **must keep its trailing slash** (`html/acurioustale.de/`).
 The deploy key is jailed server-side to a forced `rsync` command that matches that
