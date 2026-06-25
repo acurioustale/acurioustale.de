@@ -1,3 +1,22 @@
+# Per-user Claude Code settings (not shared)
 .claude/settings.local.json
+
+# macOS (github/gitignore · Global/macOS.gitignore)
 .DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Node / npm — only the dev-time lint toolchain uses these
+# (github/gitignore · Node.gitignore)
 node_modules/
+.npm
+.eslintcache
+*.log
+*.tgz
+
+# Local env / secrets
+.env
+.env.*
