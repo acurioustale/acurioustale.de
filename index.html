@@ -6,6 +6,17 @@
       <title>Markus Spitzner — me@acurioustale.de</title>
       <meta name="description" content="Markus Spitzner — CSA in Cork, Ireland. Creator of Compare Builds."/>
       <link href="css/style.css" rel="stylesheet"/>
+      <script>
+         // Apply a saved theme before first paint to avoid a flash.
+         (function () {
+            try {
+               var t = localStorage.getItem("theme");
+               if (t === "light" || t === "dark") {
+                  document.documentElement.setAttribute("data-theme", t);
+               }
+            } catch (e) {}
+         })();
+      </script>
    </head>
    <body>
       <main class="terminal" aria-label="Terminal window: me@acurioustale.de">
@@ -43,5 +54,47 @@
             <p class="cmd prompt-last"><span class="prompt">$</span> <span class="cursor" aria-hidden="true"></span></p>
          </div>
       </main>
+      <script>
+         // Inject the theme toggle as progressive enhancement: without JS the
+         // OS preference still drives light/dark via CSS, and no dead control shows.
+         (function () {
+            var root = document.documentElement;
+            var bar = document.querySelector(".titlebar");
+            if (!bar) return;
+
+            var mq = window.matchMedia("(prefers-color-scheme: light)");
+            function current() {
+               var attr = root.getAttribute("data-theme");
+               return attr ? attr : (mq.matches ? "light" : "dark");
+            }
+
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "theme-toggle";
+
+            function render() {
+               var mode = current();
+               var label = mode === "dark" ? "Switch to light theme" : "Switch to dark theme";
+               btn.textContent = mode === "dark" ? "☼" : "☾";
+               btn.setAttribute("aria-label", label);
+               btn.title = label;
+            }
+
+            btn.addEventListener("click", function () {
+               var next = current() === "dark" ? "light" : "dark";
+               root.setAttribute("data-theme", next);
+               try { localStorage.setItem("theme", next); } catch (e) {}
+               render();
+            });
+
+            // Follow OS changes only while the visitor hasn't set a manual override.
+            mq.addEventListener("change", function () {
+               if (!root.getAttribute("data-theme")) render();
+            });
+
+            bar.appendChild(btn);
+            render();
+         })();
+      </script>
    </body>
 </html>
