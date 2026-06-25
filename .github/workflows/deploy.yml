@@ -3,6 +3,7 @@ name: deploy
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
     inputs:
       dry_run:
@@ -10,13 +11,50 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Nu Html Checker (current release) over the markup, the stylesheet and the
+      # SVG favicon, mirroring `validate.sh`. We download the jar rather than use
+      # a packaged wrapper: wrappers ship an older bundled vnu that rejects valid
+      # modern features (theme-color `media`, the `color-scheme` CSS property).
+      # Selecting files by extension keeps vnu away from the binary PNGs.
+      - name: Validate HTML, CSS and SVG
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/vnu.jar" \
+            https://github.com/validator/validator/releases/download/latest/vnu.jar
+          files=$(find . -path ./.git -prune -o \
+            \( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
+          java -jar "$RUNNER_TEMP/vnu.jar" \
+            --filterpattern '.*Trailing slash on void elements.*' \
+            --also-check-css --also-check-svg $files
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Pinned to the version run locally so CI and developers agree on style.
+      - name: Check formatting (Prettier)
+        run: npx prettier@3.8.3 --check .
+
+  deploy:
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
