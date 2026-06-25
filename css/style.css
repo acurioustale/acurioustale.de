@@ -296,6 +296,31 @@ a:focus-visible {
   animation: blink 1.1s steps(1) infinite;
 }
 
+/* The real prompt input, injected by JS as progressive enhancement. It grows
+   with its content (width set inline, in ch) so the trailing .cursor block sits
+   right after the text. The native caret is hidden so the blinking block stays
+   the only cursor in every state — focusing the field doesn't swap its look. */
+.cmd-input {
+  width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cmd);
+  font: inherit;
+  caret-color: transparent;
+}
+
+.cmd-input:focus {
+  outline: none;
+}
+
+/* Denied-command output. Echoed commands reuse .cmd/.prompt/.run above. */
+.reply {
+  margin: 0;
+  color: var(--muted);
+}
+
 @keyframes blink {
   50% {
     opacity: 0;
@@ -357,7 +382,8 @@ a:focus-visible {
   }
 
   .titlebar,
-  .cursor {
+  .cursor,
+  .cmd-input {
     display: none;
   }
 
