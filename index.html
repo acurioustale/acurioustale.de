@@ -214,8 +214,9 @@
     <script>
       // Easter egg: turn the static prompt into a real input as progressive
       // enhancement. Without JS the blinking cursor stays and nothing breaks.
-      // Every command is denied except clear (which resets the screen); the
-      // denial just picks the flavour that fits.
+      // Most commands are denied, with the flavour reply() picks. The few that
+      // work replay the page's own output: clear resets the screen, ./whoami.sh
+      // and ls projects/ reprint the whoami card and the projects list.
       (function () {
         var last = document.querySelector(".prompt-last");
         if (!last) return;
@@ -257,7 +258,10 @@
           var prevDisplay = log.style.display;
           log.style.display = "none";
           screen.style.height = "auto";
-          var boot = screen.offsetHeight;
+          // Round up and add a hair of slack: the content height is often
+          // fractional, and freezing to a value even a sub-pixel short trips the
+          // scrollbar at some zoom levels and device pixel ratios.
+          var boot = Math.ceil(screen.getBoundingClientRect().height) + 2;
           log.style.display = prevDisplay;
           screen.style.height = boot + "px";
           screen.scrollTop = screen.scrollHeight;
@@ -266,13 +270,19 @@
         // Recompute on resize: the card reflows, changing the boot height.
         window.addEventListener("resize", fitScreen);
 
-        // Pick the denial that fits: privileged → permission denied, anything
+        // Pick the denial that fits: privileged → permission denied, a bare ls
+        // is locked down, ls of any other path errors like ls, anything else
         // that looks like a path → no such file, otherwise command not found.
-        function reply(raw) {
-          var cmd = raw.trim();
+        function reply(cmd) {
           var argv = cmd.split(/\s+/);
           var PRIV = { sudo: 1, su: 1, doas: 1, chmod: 1, chown: 1 };
           if (PRIV[argv[0]]) return argv[0] + ": permission denied";
+          if (argv[0] === "ls") {
+            if (argv.length < 2) return "ls: .: Permission denied";
+            return (
+              "ls: " + argv.slice(1).join(" ") + ": No such file or directory"
+            );
+          }
           if (cmd.indexOf("/") !== -1) {
             return (
               "bash: " + argv[argv.length - 1] + ": No such file or directory"
@@ -281,21 +291,9 @@
           return "bash: " + argv[0] + ": command not found";
         }
 
-        function run() {
-          var raw = input.value;
-          if (!raw.trim()) return;
-
-          // The one command that works: clear wipes the scrollback, leaving the
-          // page in its initial boot state (the whoami card and projects).
-          if (raw.trim() === "clear") {
-            log.textContent = "";
-            input.value = "";
-            size();
-            return;
-          }
-
-          // Echo the command, reusing the prompt/run styling. textContent only —
-          // never innerHTML — so typed input can't inject markup.
+        // Echo the typed command, reusing the prompt/run styling. textContent
+        // only — never innerHTML — so typed input can't inject markup.
+        function echoLine(raw) {
           var echo = document.createElement("p");
           echo.className = "cmd";
           var p = document.createElement("span");
@@ -306,13 +304,48 @@
           c.textContent = " " + raw;
           echo.appendChild(p);
           echo.appendChild(c);
+          log.appendChild(echo);
+        }
 
+        // Replay a static block (the whoami card or the projects list) as output
+        // by cloning the original node, so it stays in sync with the page.
+        function echoBlock(selector) {
+          var node = document.querySelector(selector);
+          if (node) log.appendChild(node.cloneNode(true));
+        }
+
+        function replyLine(text) {
           var out = document.createElement("p");
           out.className = "reply";
-          out.textContent = reply(raw);
-
-          log.appendChild(echo);
+          out.textContent = text;
           log.appendChild(out);
+        }
+
+        function run() {
+          var raw = input.value;
+          var cmd = raw.trim();
+          if (!cmd) return;
+
+          // The one command that works: clear wipes the scrollback, leaving the
+          // page in its initial boot state (the whoami card and projects).
+          if (cmd === "clear") {
+            log.textContent = "";
+            input.value = "";
+            size();
+            return;
+          }
+
+          echoLine(raw);
+
+          // Commands that produce real output replay the matching static block;
+          // everything else is denied with the flavour reply() picks.
+          if (cmd === "./whoami.sh") {
+            echoBlock(".whoami");
+          } else if (cmd === "ls projects/" || cmd === "ls projects") {
+            echoBlock(".projects");
+          } else {
+            replyLine(reply(cmd));
+          }
 
           input.value = "";
           size();
