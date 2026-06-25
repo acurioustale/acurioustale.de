@@ -16,6 +16,9 @@ prompt into an interactive, always-denied terminal easter egg (desktop only).
 ├── index.html          ← the page (markup + inline theme scripts)
 ├── css/style.css       ← terminal styling, light/dark via CSS custom properties
 ├── assets/             ← favicon, apple-touch icon, Open Graph share image
+├── robots.txt          ← allow-all crawl rule + sitemap pointer
+├── sitemap.xml         ← single-page sitemap
+├── humans.txt          ← the people behind the site (linked via rel="author")
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
 ├── lychee.toml         ← link-checker config (used by the links workflow)
 ├── package.json        ← npm-only lint tools (ESLint, markdownlint-cli2, svgo)
@@ -73,8 +76,8 @@ manually from the Actions tab); pull requests run the same gate without deployin
 Link checking runs separately (see Development) so flaky external hosts never
 block a deploy.
 
-`deploy.sh` is an `rsync -avz --delete` of `index.html`, `css/` and `assets/` to
-the web root on the host:
+`deploy.sh` is an `rsync -avz --delete` of `index.html`, `robots.txt`,
+`sitemap.xml`, `humans.txt`, `css/` and `assets/` to the web root on the host:
 
 ```text
 web4186@http2.core-networks.de:html/acurioustale.de/
@@ -97,9 +100,9 @@ To deploy by hand instead (uses your own SSH access), run:
 ```
 
 The `--delete` flag keeps the deployed `css/` and `assets/` directories in sync —
-files removed locally are removed on the server too. Only `index.html`, `css/`
-and `assets/` are pushed, so unrelated files elsewhere in the web root are left
-untouched.
+files removed locally are removed on the server too. Only the files listed above
+(`index.html`, `robots.txt`, `sitemap.xml`, `humans.txt`, `css/` and `assets/`)
+are pushed, so unrelated files elsewhere in the web root are left untouched.
 
 ## License
 
