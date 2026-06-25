@@ -29,6 +29,13 @@ the site itself still ships no dependencies. Prettier uses its defaults; keep th
 Prettier, shfmt and actionlint versions in `deploy.yml` in sync with local.
 `.claude/launch.json` defines a "site" launch config that serves on port 4174.
 
+`npm audit` reports two moderate advisories for `js-yaml 4.1.1`, pulled in by
+`markdownlint-cli2`. They are accepted, not fixable here: the only patched line
+is `js-yaml@5`, which drops the default export `markdownlint-cli2` imports and so
+breaks it. The advisory is a quadratic-complexity DoS, and this is dev-only
+tooling that lints our own files, so there is no untrusted input. The
+`markdown-it` advisory was fixable and is pinned via `overrides`.
+
 ## Theme system (the one piece of real logic)
 
 Light/dark theming is split across three files and is easy to break if you touch
