@@ -1,0 +1,26 @@
+name: links
+
+# Link checking is intentionally separate from deploy: external hosts have
+# transient outages, so a broken link should surface on pull requests and a
+# weekly schedule without ever blocking a production deploy.
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check links (lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: "--config lychee.toml --no-progress index.html README.md CLAUDE.md"
+          fail: true

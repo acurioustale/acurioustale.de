@@ -16,7 +16,8 @@ persisted in `localStorage`.
 ├── css/style.css       ← terminal styling, light/dark via CSS custom properties
 ├── assets/             ← favicon, apple-touch icon, Open Graph share image
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
-├── validate.sh         ← run the CI checks locally (vnu + prettier)
+├── lychee.toml         ← link-checker config (used by the links workflow)
+├── validate.sh         ← run the CI checks locally (vnu, prettier, shell, workflows)
 └── deploy.sh           ← rsync deploy to the web host
 ```
 
@@ -33,8 +34,17 @@ Before pushing, run the same checks CI runs (HTML/CSS/SVG validation and
 formatting). Install the tools once, then run the script:
 
 ```bash
-brew install vnu prettier shellcheck shfmt   # one-time
+brew install vnu prettier shellcheck shfmt actionlint   # one-time
 ./validate.sh
+```
+
+Links are checked separately (they need the network and external hosts flake, so
+they never gate a deploy) — on pull requests and a weekly schedule via the
+[`links` workflow](.github/workflows/links.yml). To check them by hand:
+
+```bash
+brew install lychee
+lychee --config lychee.toml index.html README.md CLAUDE.md
 ```
 
 ### Regenerating the share image
@@ -50,10 +60,12 @@ headless tools without a proper font stack drop the text.
 Pushing to `main` deploys automatically. The
 [`deploy` workflow](.github/workflows/deploy.yml) first validates the HTML, CSS
 and SVG with the [Nu Html Checker](https://validator.github.io/validator/),
-checks formatting with Prettier, and lints the shell scripts with ShellCheck and
-shfmt, then runs `deploy.sh` only if everything passes. It runs on every push to
-`main` (and can be triggered manually from the Actions tab); pull requests run
-the same checks without deploying.
+checks formatting with Prettier, lints the shell scripts with ShellCheck and
+shfmt, and lints the workflows with actionlint, then runs `deploy.sh` only if
+everything passes. It runs on every push to `main` (and can be triggered manually
+from the Actions tab); pull requests run the same checks without deploying. Link
+checking runs separately (see Development) so flaky external hosts never block a
+deploy.
 
 `deploy.sh` is an `rsync -avz --delete` of `index.html`, `css/` and `assets/` to
 the web root on the host:
