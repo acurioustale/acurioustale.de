@@ -157,14 +157,13 @@
     <script>
       // Inject the theme toggle as progressive enhancement: without JS the
       // OS preference still drives light/dark via CSS, and no dead control shows.
-      // The toggle cycles auto → light → dark; "auto" clears the override and
-      // hands control back to the OS preference.
+      // The toggle cycles through auto, light and dark; "auto" clears the
+      // override and hands control back to the OS preference.
       (function () {
         var root = document.documentElement;
         var bar = document.querySelector(".titlebar");
         if (!bar) return;
 
-        var STATES = ["auto", "light", "dark"];
         var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
 
         // The current explicit override, or "auto" when none is set.
@@ -173,13 +172,27 @@
           return attr === "light" || attr === "dark" ? attr : "auto";
         }
 
-        function apply(next) {
+        // Cycle order. "auto" looks identical to the OS preference, so one step
+        // of a three-way cycle is always colour-neutral. Visiting the theme that
+        // matches the OS last puts that neutral step on the wrap back to auto,
+        // so every other click visibly flips the colour (no dead first click).
+        function next(m) {
+          var osLight = window.matchMedia(
+            "(prefers-color-scheme: light)",
+          ).matches;
+          var order = osLight
+            ? ["auto", "dark", "light"]
+            : ["auto", "light", "dark"];
+          return order[(order.indexOf(m) + 1) % order.length];
+        }
+
+        function apply(to) {
           try {
-            if (next === "auto") localStorage.removeItem("theme");
-            else localStorage.setItem("theme", next);
+            if (to === "auto") localStorage.removeItem("theme");
+            else localStorage.setItem("theme", to);
           } catch (e) {}
-          if (next === "auto") root.removeAttribute("data-theme");
-          else root.setAttribute("data-theme", next);
+          if (to === "auto") root.removeAttribute("data-theme");
+          else root.setAttribute("data-theme", to);
         }
 
         var btn = document.createElement("button");
@@ -188,15 +201,14 @@
 
         function render() {
           var m = mode();
-          var next = STATES[(STATES.indexOf(m) + 1) % STATES.length];
-          var label = "Theme: " + m + " — switch to " + next;
+          var label = "Theme: " + m + " — switch to " + next(m);
           btn.textContent = GLYPH[m];
           btn.setAttribute("aria-label", label);
           btn.title = label;
         }
 
         btn.addEventListener("click", function () {
-          apply(STATES[(STATES.indexOf(mode()) + 1) % STATES.length]);
+          apply(next(mode()));
           render();
         });
 

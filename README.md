@@ -4,11 +4,12 @@ Personal landing page — a terminal-styled "whoami" card, deployed at
 [acurioustale.de](https://acurioustale.de).
 
 It's a single static `index.html` with one stylesheet, no framework and no build
-step. Two small inline scripts handle theming: one applies a saved theme before
-first paint (to avoid a flash), the other injects a light/dark toggle as
-progressive enhancement — without JavaScript the OS `prefers-color-scheme` still
-drives the colours via CSS and no dead control is shown. The chosen theme is
-persisted in `localStorage`.
+step. Three small inline scripts power it. Two handle theming: one applies a
+saved theme before first paint (to avoid a flash), the other injects an
+auto/light/dark toggle as progressive enhancement — without JavaScript the OS
+`prefers-color-scheme` still drives the colours via CSS and no dead control is
+shown. The chosen theme is persisted in `localStorage`. The third turns the
+prompt into an interactive, always-denied terminal easter egg (desktop only).
 
 ```text
 .
