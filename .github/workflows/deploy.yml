@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview changes without writing (rsync --dry-run)"
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-production
@@ -30,4 +35,4 @@ jobs:
           EOF
 
       - name: Deploy
-        run: ./deploy.sh
+        run: ./deploy.sh ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
