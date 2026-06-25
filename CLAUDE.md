@@ -48,14 +48,18 @@ order is derived from the OS preference so that unavoidable no-op lands on the
 return to **auto**, and every other click visibly flips light/dark (no dead first
 click on a light-mode OS).
 
-- `css/style.css` defines every colour twice in `:root` as `--dark-*` and
-  `--light-*` custom properties, then maps one set onto the active `--*`
-  variables. Dark is the default. Light activates from **two** triggers that
-  must stay in sync: `@media (prefers-color-scheme: light)` scoped to
-  `:root:not([data-theme="dark"])` (OS preference when no explicit choice), and
-  `:root[data-theme="light"]` (explicit toggle). When adding or renaming a
-  colour, update the `--dark-*`/`--light-*` definitions **and** both activation
-  blocks.
+- `css/style.css` sets `color-scheme: light dark` on `:root` and defines each
+  active `--*` token **once** as `--token: light-dark(<light>, <dark>)`. The
+  browser resolves each `light-dark()` to its light or dark value from the used
+  `color-scheme`, so the OS preference drives the colours for free (this is what
+  makes the no-JS path follow the OS). The explicit toggle does not re-map any
+  colour — it only forces the scheme: `:root[data-theme="light"]` sets
+  `color-scheme: light` and `:root[data-theme="dark"]` sets `color-scheme: dark`,
+  and every token follows. When adding or renaming a colour, add the one
+  `light-dark()` token; there are no separate palette vars or activation blocks
+  to keep in sync. (`light-dark()` is Baseline since mid-2024 — Chrome 123,
+  Firefox 120, Safari 17.5; pre-2024 browsers are intentionally out of scope and
+  there is no fallback.)
 - `index.html` has three inline scripts; the first two drive theming. The first
   (in `<head>`) applies a saved theme from `localStorage` before first paint to
   avoid a flash. The second (end of `<body>`) injects the toggle button as

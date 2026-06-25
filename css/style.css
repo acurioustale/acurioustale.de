@@ -1,91 +1,42 @@
 @charset "utf-8";
 
+/* Light/dark theming, single source of truth. `color-scheme: light dark` lets
+   light-dark() resolve each token to its light or dark value automatically:
+   from the OS preference by default (so the no-JS path follows the OS for free),
+   and forced one way by the toggle, which only flips color-scheme below. Each
+   token is written once as light-dark(<light>, <dark>) — no repeated activation
+   blocks, no separate named palette vars to keep in sync. */
 :root {
-  /* Dark palette (the default). */
-  --dark-page-bg: #0e0f10;
-  --dark-term-bg: #1b1d1e;
-  --dark-term-bar: #242728;
-  --dark-term-border: #2c2f30;
-  --dark-fg: #d3d1c7;
-  --dark-muted: #888780;
-  --dark-rule: #5f5e5a;
-  --dark-prompt: #5dcaa5;
-  --dark-cmd: #c0dd97;
-  --dark-name: #9fe1cb;
-  --dark-label: #5dcaa5;
-  --dark-link: #85b7eb;
+  color-scheme: light dark;
 
-  /* Light palette. */
-  --light-page-bg: #e8e6df;
-  --light-term-bg: #ffffff;
-  --light-term-bar: #efede6;
-  --light-term-border: #d3d1c7;
-  --light-fg: #2c2c2a;
-  --light-muted: #76756f;
-  --light-rule: #b4b2a9;
-  --light-prompt: #0f6e56;
-  --light-cmd: #3b6d11;
-  --light-name: #0f6e56;
-  --light-label: #0f6e56;
-  --light-link: #185fa5;
+  --page-bg: light-dark(#e8e6df, #0e0f10);
+  --term-bg: light-dark(#ffffff, #1b1d1e);
+  --term-bar: light-dark(#efede6, #242728);
+  --term-border: light-dark(#d3d1c7, #2c2f30);
+  --fg: light-dark(#2c2c2a, #d3d1c7);
+  --muted: light-dark(#76756f, #888780);
+  --rule: light-dark(#b4b2a9, #5f5e5a);
+  --prompt: light-dark(#0f6e56, #5dcaa5);
+  --cmd: light-dark(#3b6d11, #c0dd97);
+  --name: light-dark(#0f6e56, #9fe1cb);
+  --label: light-dark(#0f6e56, #5dcaa5);
+  --link: light-dark(#185fa5, #85b7eb);
 
   /* Theme-independent. */
   --accent: #1d9e75;
   --dot-red: #e24b4a;
   --dot-amber: #ef9f27;
   --dot-green: #1d9e75;
-
-  /* Active palette → dark by default. */
-  color-scheme: dark;
-  --page-bg: var(--dark-page-bg);
-  --term-bg: var(--dark-term-bg);
-  --term-bar: var(--dark-term-bar);
-  --term-border: var(--dark-term-border);
-  --fg: var(--dark-fg);
-  --muted: var(--dark-muted);
-  --rule: var(--dark-rule);
-  --prompt: var(--dark-prompt);
-  --cmd: var(--dark-cmd);
-  --name: var(--dark-name);
-  --label: var(--dark-label);
-  --link: var(--dark-link);
 }
 
-/* Activate the light palette — either from the OS preference (when the visitor
-   hasn't picked a theme) or from the explicit toggle. Only the activation is
-   repeated across the two triggers; the colour values live in one place above. */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-    --page-bg: var(--light-page-bg);
-    --term-bg: var(--light-term-bg);
-    --term-bar: var(--light-term-bar);
-    --term-border: var(--light-term-border);
-    --fg: var(--light-fg);
-    --muted: var(--light-muted);
-    --rule: var(--light-rule);
-    --prompt: var(--light-prompt);
-    --cmd: var(--light-cmd);
-    --name: var(--light-name);
-    --label: var(--light-label);
-    --link: var(--light-link);
-  }
-}
-
+/* The toggle's explicit override: force one scheme, which steers every
+   light-dark() token above. Absent data-theme = auto = follow the OS. */
 :root[data-theme="light"] {
   color-scheme: light;
-  --page-bg: var(--light-page-bg);
-  --term-bg: var(--light-term-bg);
-  --term-bar: var(--light-term-bar);
-  --term-border: var(--light-term-border);
-  --fg: var(--light-fg);
-  --muted: var(--light-muted);
-  --rule: var(--light-rule);
-  --prompt: var(--light-prompt);
-  --cmd: var(--light-cmd);
-  --name: var(--light-name);
-  --label: var(--light-label);
-  --link: var(--light-link);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 * {
