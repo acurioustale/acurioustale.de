@@ -1,16 +1,47 @@
-<html lang="de">
+<!DOCTYPE html>
+<html lang="en">
    <head>
       <meta charset="utf-8"/>
-      <title>acurioustale</title>
-      <link href="css/screen.css" rel="stylesheet" media="screen" type="text/css"/>
-      <link href="css/print.css" rel="stylesheet" media="print" type="text/css"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <title>Markus Spitzner — me@acurioustale.de</title>
+      <meta name="description" content="Markus Spitzner — CSA in Cork, Ireland. Creator of Compare Builds."/>
+      <link href="css/style.css" rel="stylesheet"/>
    </head>
    <body>
-      <h1>acurioustale</h1>
-      <p>Hi, my name is Markus Spitzner. I live in Cork and work at <em>some kind of fruit company</em>.</p>
-      <h2>Networks</h2>
-      <p>Check out my code on <a href="https://github.com/acurioustale">GitHub</a> or connect with me on <a href="https://linkedin.com/in/acurioustale">LinkedIn</a>.</p>
-      <h2>Contact</h2>
-      <address>Email: <a href="mailto:me@acurioustale.de">me@acurioustale.de</a><br/>Mobile: <a href="tel:+353894825989">+353&nbsp;(89)&nbsp;4825989</a></address>
+      <main class="terminal" aria-label="Terminal window: me@acurioustale.de">
+         <div class="titlebar">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="title">me@acurioustale.de: ~</span>
+         </div>
+         <div class="screen">
+            <p class="cmd"><span class="prompt">$</span> <span class="run">./whoami.sh</span></p>
+
+            <div class="whoami">
+               <pre class="ascii" aria-hidden="true"> __  __  ___
+|  \/  |/ __|
+| |\/| |\__ \
+|_|  |_||___/</pre>
+               <div class="info">
+                  <h1 class="name">markus spitzner</h1>
+                  <hr/>
+                  <dl class="fields">
+                     <dt>role</dt><dd>csa @ <em>some kind of fruit company</em></dd>
+                     <dt>location</dt><dd>cork, ireland</dd>
+                     <dt>github</dt><dd><a href="https://github.com/acurioustale">github.com/acurioustale</a></dd>
+                     <dt>linkedin</dt><dd><a href="https://linkedin.com/in/acurioustale">in/acurioustale</a></dd>
+                     <dt>email</dt><dd><a href="mailto:me@acurioustale.de">me@acurioustale.de</a></dd>
+                     <dt>mobile</dt><dd><a href="tel:+353894825989">+353&nbsp;(89)&nbsp;4825989</a></dd>
+                  </dl>
+               </div>
+            </div>
+
+            <p class="cmd run-projects"><span class="prompt">$</span> <span class="run">ls projects/</span></p>
+            <ul class="projects">
+               <li><span class="proj">Compare Builds</span> <span class="arrow" aria-hidden="true">→</span> <a href="https://comparebuilds.app">comparebuilds.app</a></li>
+            </ul>
+
+            <p class="cmd prompt-last"><span class="prompt">$</span> <span class="cursor" aria-hidden="true"></span></p>
+         </div>
+      </main>
    </body>
 </html>
