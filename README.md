@@ -17,8 +17,9 @@ persisted in `localStorage`.
 ├── assets/             ← favicon, apple-touch icon, Open Graph share image
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
 ├── lychee.toml         ← link-checker config (used by the links workflow)
-├── package.json        ← npm-only lint tools (ESLint, markdownlint-cli2)
-├── validate.sh         ← run the CI checks locally (vnu, prettier, shell, JS, md)
+├── package.json        ← npm-only lint tools (ESLint, markdownlint-cli2, svgo)
+├── .github/workflows/  ← deploy (gating checks) + links (lychee) CI
+├── validate.sh         ← run all gating CI checks locally
 └── deploy.sh           ← rsync deploy to the web host
 ```
 
@@ -31,12 +32,12 @@ for a realistic origin:
 python3 -m http.server 8000   # then visit http://localhost:8000
 ```
 
-Before pushing, run the same checks CI runs (HTML/CSS/SVG validation and
-formatting). Install the tools once, then run the script:
+Before pushing, run the same gating checks CI runs (validation, formatting and
+linting across the repo). Install the tools once, then run the script:
 
 ```bash
 brew install vnu prettier shellcheck shfmt actionlint   # one-time
-npm install                                             # one-time (ESLint, markdownlint-cli2)
+npm install                                             # one-time (ESLint, markdownlint-cli2, svgo)
 ./validate.sh
 ```
 
@@ -60,15 +61,16 @@ headless tools without a proper font stack drop the text.
 ## Deployment
 
 Pushing to `main` deploys automatically. The
-[`deploy` workflow](.github/workflows/deploy.yml) first validates the HTML, CSS
-and SVG with the [Nu Html Checker](https://validator.github.io/validator/),
-checks formatting with Prettier, keeps the SVGs optimised with svgo, lints the
-shell scripts with ShellCheck and shfmt, lints the workflows with actionlint, and
-lints the inline JS, the JSON and the Markdown with ESLint and markdownlint-cli2,
-then runs `deploy.sh` only if everything passes. It runs on every push to `main` (and can be triggered manually
-from the Actions tab); pull requests run the same checks without deploying. Link
-checking runs separately (see Development) so flaky external hosts never block a
-deploy.
+[`deploy` workflow](.github/workflows/deploy.yml) first runs a `validate` gate: it
+validates the HTML, CSS and SVG with the
+[Nu Html Checker](https://validator.github.io/validator/), checks formatting with
+Prettier, keeps the SVGs optimised with svgo, and lints the shell scripts
+(ShellCheck, shfmt), the workflows (actionlint), and the inline JS, JSON and
+Markdown (ESLint, markdownlint-cli2). Only if everything passes does it run
+`deploy.sh`. The workflow runs on every push to `main` (and can be triggered
+manually from the Actions tab); pull requests run the same gate without deploying.
+Link checking runs separately (see Development) so flaky external hosts never
+block a deploy.
 
 `deploy.sh` is an `rsync -avz --delete` of `index.html`, `css/` and `assets/` to
 the web root on the host:
