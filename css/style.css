@@ -1,61 +1,91 @@
 @charset "utf-8";
 
 :root {
-	color-scheme: dark;
-	--page-bg: #0e0f10;
-	--term-bg: #1b1d1e;
-	--term-bar: #242728;
-	--term-border: #2c2f30;
-	--fg: #d3d1c7;
-	--muted: #888780;
-	--rule: #5f5e5a;
-	--prompt: #5dcaa5;
-	--cmd: #c0dd97;
-	--name: #9fe1cb;
-	--label: #5dcaa5;
-	--link: #85b7eb;
+	/* Dark palette (the default). */
+	--dark-page-bg: #0e0f10;
+	--dark-term-bg: #1b1d1e;
+	--dark-term-bar: #242728;
+	--dark-term-border: #2c2f30;
+	--dark-fg: #d3d1c7;
+	--dark-muted: #888780;
+	--dark-rule: #5f5e5a;
+	--dark-prompt: #5dcaa5;
+	--dark-cmd: #c0dd97;
+	--dark-name: #9fe1cb;
+	--dark-label: #5dcaa5;
+	--dark-link: #85b7eb;
+
+	/* Light palette. */
+	--light-page-bg: #e8e6df;
+	--light-term-bg: #ffffff;
+	--light-term-bar: #efede6;
+	--light-term-border: #d3d1c7;
+	--light-fg: #2c2c2a;
+	--light-muted: #76756f;
+	--light-rule: #b4b2a9;
+	--light-prompt: #0f6e56;
+	--light-cmd: #3b6d11;
+	--light-name: #0f6e56;
+	--light-label: #0f6e56;
+	--light-link: #185fa5;
+
+	/* Theme-independent. */
 	--accent: #1d9e75;
 	--dot-red: #e24b4a;
 	--dot-amber: #ef9f27;
 	--dot-green: #1d9e75;
+
+	/* Active palette → dark by default. */
+	color-scheme: dark;
+	--page-bg: var(--dark-page-bg);
+	--term-bg: var(--dark-term-bg);
+	--term-bar: var(--dark-term-bar);
+	--term-border: var(--dark-term-border);
+	--fg: var(--dark-fg);
+	--muted: var(--dark-muted);
+	--rule: var(--dark-rule);
+	--prompt: var(--dark-prompt);
+	--cmd: var(--dark-cmd);
+	--name: var(--dark-name);
+	--label: var(--dark-label);
+	--link: var(--dark-link);
 }
 
-/* Light palette. Applied either from the OS preference (when the visitor
-   hasn't picked a theme) or from the explicit toggle. Keep both blocks in sync. */
+/* Activate the light palette — either from the OS preference (when the visitor
+   hasn't picked a theme) or from the explicit toggle. Only the activation is
+   repeated across the two triggers; the colour values live in one place above. */
 @media (prefers-color-scheme: light) {
 	:root:not([data-theme="dark"]) {
 		color-scheme: light;
-		--page-bg: #e8e6df;
-		--term-bg: #ffffff;
-		--term-bar: #efede6;
-		--term-border: #d3d1c7;
-		--fg: #2c2c2a;
-		--muted: #76756f;
-		--rule: #b4b2a9;
-		--prompt: #0f6e56;
-		--cmd: #3b6d11;
-		--name: #0f6e56;
-		--label: #0f6e56;
-		--link: #185fa5;
-		--accent: #1d9e75;
+		--page-bg: var(--light-page-bg);
+		--term-bg: var(--light-term-bg);
+		--term-bar: var(--light-term-bar);
+		--term-border: var(--light-term-border);
+		--fg: var(--light-fg);
+		--muted: var(--light-muted);
+		--rule: var(--light-rule);
+		--prompt: var(--light-prompt);
+		--cmd: var(--light-cmd);
+		--name: var(--light-name);
+		--label: var(--light-label);
+		--link: var(--light-link);
 	}
 }
 
 :root[data-theme="light"] {
 	color-scheme: light;
-	--page-bg: #e8e6df;
-	--term-bg: #ffffff;
-	--term-bar: #efede6;
-	--term-border: #d3d1c7;
-	--fg: #2c2c2a;
-	--muted: #76756f;
-	--rule: #b4b2a9;
-	--prompt: #0f6e56;
-	--cmd: #3b6d11;
-	--name: #0f6e56;
-	--label: #0f6e56;
-	--link: #185fa5;
-	--accent: #1d9e75;
+	--page-bg: var(--light-page-bg);
+	--term-bg: var(--light-term-bg);
+	--term-bar: var(--light-term-bar);
+	--term-border: var(--light-term-border);
+	--fg: var(--light-fg);
+	--muted: var(--light-muted);
+	--rule: var(--light-rule);
+	--prompt: var(--light-prompt);
+	--cmd: var(--light-cmd);
+	--name: var(--light-name);
+	--label: var(--light-label);
+	--link: var(--light-link);
 }
 
 * {
@@ -133,10 +163,14 @@ body {
 	cursor: pointer;
 }
 
-.theme-toggle:hover,
+.theme-toggle:hover {
+	color: var(--accent);
+}
+
 .theme-toggle:focus-visible {
 	color: var(--accent);
-	outline: none;
+	outline: 1px solid var(--accent);
+	outline-offset: 2px;
 }
 
 .screen {
@@ -239,7 +273,7 @@ a {
 }
 
 a:hover,
-a:focus {
+a:focus-visible {
 	color: var(--accent);
 	border-bottom-color: var(--accent);
 }
