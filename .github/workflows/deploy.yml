@@ -35,10 +35,14 @@ jobs:
             https://github.com/validator/validator/releases/download/latest/vnu.jar
           files=$(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
             \( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
+          # Filter two benign infos: the void-element trailing slash (Prettier
+          # house style) and the CSP meta check, a file:// false positive where
+          # script-src 'self' can't match the same-origin js/ modules (served
+          # over https it allows them; verified in-browser, no violations).
           # $files is intentionally unquoted so each path is a separate argument.
           # shellcheck disable=SC2086
           java -jar "$RUNNER_TEMP/vnu.jar" \
-            --filterpattern '.*Trailing slash on void elements.*' \
+            --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
             --also-check-css --also-check-svg $files
 
       # vnu only covers the SVG XML; sitemap.xml is otherwise unchecked. Plain
@@ -82,10 +86,23 @@ jobs:
           tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
-      # ESLint (inline JS in index.html, plus JSON via @eslint/json) and
-      # markdownlint-cli2, pinned via the committed package-lock.json.
-      - name: Lint JS, JSON and Markdown
+      # ESLint (the browser modules in js/ and the inline JS in index.html, plus
+      # JSON via @eslint/json), stylelint (css/) and markdownlint-cli2, all pinned
+      # via package-lock.json.
+      - name: Lint JS, JSON, CSS and Markdown
         run: npm run lint
+
+      # Unit tests for the extracted pure logic (the theme cycle and the
+      # terminal command replies), via Node's built-in runner — no extra deps.
+      - name: Run unit tests
+        run: npm test
+
+      # Fail if the inline theme guard's sha256 isn't in the CSP (so the policy
+      # can't drift), and if the og-image isn't the declared 1200x630.
+      - name: Check CSP and og-image
+        run: |
+          npm run check:csp
+          npm run check:og
 
       # svgo keeps the SVGs optimised; the check fails if either would change.
       - name: Check SVG optimisation

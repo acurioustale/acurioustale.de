@@ -14,7 +14,9 @@ export default [
     ...js.configs.recommended,
   },
   {
-    files: ["**/*.html"],
+    // The inline <script> in index.html plus the browser modules in js/. Both
+    // run in the browser; allow the same intentional patterns as the inline JS.
+    files: ["**/*.html", "js/**/*.js"],
     plugins: { html },
     languageOptions: {
       globals: { ...globals.browser },
@@ -25,6 +27,14 @@ export default [
       "no-empty": ["error", { allowEmptyCatch: true }],
       // The caught error binding in those guards is deliberately unused.
       "no-unused-vars": ["error", { caughtErrors: "none" }],
+    },
+  },
+
+  // Node-run code: the test suite (node --test) and the dev-time CI checks.
+  {
+    files: ["test/**/*.js", "tools/**/*.mjs"],
+    languageOptions: {
+      globals: { ...globals.node },
     },
   },
 

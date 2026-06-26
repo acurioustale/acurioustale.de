@@ -10,7 +10,7 @@
   color-scheme: light dark;
 
   --page-bg: light-dark(#e8e6df, #0e0f10);
-  --term-bg: light-dark(#ffffff, #1b1d1e);
+  --term-bg: light-dark(#fff, #1b1d1e);
   --term-bar: light-dark(#efede6, #242728);
   --term-border: light-dark(#d3d1c7, #2c2f30);
   --fg: light-dark(#2c2c2a, #d3d1c7);
@@ -19,6 +19,7 @@
   --prompt: light-dark(#0f6e56, #5dcaa5);
   --cmd: light-dark(#3b6d11, #c0dd97);
   --name: light-dark(#0f6e56, #9fe1cb);
+
   /* Field labels share the prompt's green in both schemes. */
   --label: var(--prompt);
   --link: light-dark(#185fa5, #85b7eb);
@@ -98,9 +99,11 @@ body {
 .dots i:nth-child(1) {
   background: var(--dot-red);
 }
+
 .dots i:nth-child(2) {
   background: var(--dot-amber);
 }
+
 .dots i:nth-child(3) {
   background: var(--dot-green);
 }
@@ -135,6 +138,7 @@ body {
 
 .screen {
   padding: 22px 26px 26px;
+
   /* When JS freezes the height (see index.html), command history scrolls inside
      the window instead of growing it, like a real terminal. A no-op until then.
      The standard scrollbar properties (not ::-webkit-scrollbar) are used on
@@ -262,6 +266,7 @@ a:focus-visible {
    the only cursor in every state — focusing the field doesn't swap its look. */
 .cmd-input {
   width: 0;
+
   /* Cap growth at the screen width so a very long line scrolls inside the
      field instead of forcing a horizontal scrollbar on .screen. */
   max-width: 100%;
@@ -290,7 +295,7 @@ a:focus-visible {
   }
 }
 
-@media (max-width: 520px) {
+@media (width <= 520px) {
   body {
     padding: 14px;
     align-items: flex-start;
