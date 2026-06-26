@@ -5,9 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 The personal landing page for [acurioustale.de](https://acurioustale.de): a single
-static `index.html` styled as a terminal "whoami" card, with one stylesheet. No
-framework and no build step; the deployed site ships no dependencies (the only npm
-packages are dev-time linters, see below).
+static `index.html` styled as a terminal "whoami" card, with one stylesheet and
+two small ES modules in `js/`. No framework and no build step; the deployed site
+ships no dependencies (the only npm packages are dev-time linters, see below). The
+`js/` modules are plain ES modules served as-is and loaded with `type="module"` —
+no bundling.
 
 ## Commands
 
@@ -20,16 +22,20 @@ python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
 There is no build step for the site — edit the files and reload the browser. CI
 validates the HTML, CSS and SVG (Nu Html Checker), checks formatting (Prettier),
 keeps the SVGs optimised (svgo), lints the shell scripts (ShellCheck and shfmt),
-the workflows (actionlint), the inline JS and JSON (ESLint) and the Markdown
-(markdownlint-cli2) on every push and pull request, and deploys are gated on all
-of them passing. Run the same checks locally with `./validate.sh` (needs `brew
-install vnu prettier shellcheck shfmt actionlint` plus `npm install` for the
-npm-only tools: ESLint, markdownlint-cli2 and svgo). Link checking is separate
-and non-gating — the `links` workflow runs lychee on pull requests and a weekly
-schedule. ESLint/markdownlint/svgo are the only tools needing `package.json`; the
-site itself still ships no dependencies. Prettier uses its defaults; keep the
-Prettier, shfmt and actionlint versions in `deploy.yml` in sync with local.
-`.claude/launch.json` defines a "site" launch config that serves on port 4174.
+the workflows (actionlint), the JS and JSON (ESLint) and the Markdown
+(markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`) and the
+CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`) on
+every push and pull request, and deploys are gated on all of them passing. Run
+the same checks locally with `./validate.sh` (needs `brew install vnu prettier
+shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: ESLint,
+markdownlint-cli2 and svgo). Link checking is separate and non-gating — the
+`links` workflow runs lychee on pull requests and a weekly schedule.
+ESLint/markdownlint/svgo are the only tools needing `package.json`; the tests and
+guards use only Node's standard library, and the site itself still ships no
+dependencies. Prettier uses its defaults; keep the Prettier, shfmt and actionlint
+versions pinned in `deploy.yml` in sync with `validate.sh`, which asserts the
+local versions match (so drift is caught before push). `.claude/launch.json`
+defines a "site" launch config that serves on port 4174.
 
 `npm audit` reports two moderate advisories for `js-yaml 4.1.1`, pulled in by
 `markdownlint-cli2`. They are accepted, not fixable here: the only patched line
@@ -40,13 +46,16 @@ tooling that lints our own files, so there is no untrusted input. The
 
 ## Theme system (the one piece of real logic)
 
-Light/dark theming is split across three files and is easy to break if you touch
-only one. The model is three-way — **auto** (follow OS), **light** and **dark** —
-and the toggle cycles through all three. Because **auto** always looks like the
-OS preference, one step of any three-way cycle can't change the colour; the cycle
+Light/dark theming is split across the stylesheet, the inline `<head>` guard and
+the `js/theme-toggle.js` module, and is easy to break if you touch only one. The
+model is three-way — **auto** (follow OS), **light** and **dark** — and the
+toggle cycles through all three. Because **auto** always looks like the OS
+preference, one step of any three-way cycle can't change the colour; the cycle
 order is derived from the OS preference so that unavoidable no-op lands on the
 return to **auto**, and every other click visibly flips light/dark (no dead first
-click on a light-mode OS).
+click on a light-mode OS). That cycle order is the pure function `nextTheme()` in
+`js/theme.js`, unit-tested in `test/theme.test.js` — change the order there, not
+by editing the toggle inline.
 
 - `css/style.css` sets `color-scheme: light dark` on `:root` and defines each
   active `--*` token **once** as `--token: light-dark(<light>, <dark>)`. The
@@ -60,24 +69,48 @@ click on a light-mode OS).
   to keep in sync. (`light-dark()` is Baseline since mid-2024 — Chrome 123,
   Firefox 120, Safari 17.5; pre-2024 browsers are intentionally out of scope and
   there is no fallback.)
-- `index.html` has three inline scripts; the first two drive theming. The first
-  (in `<head>`) applies a saved theme from `localStorage` before first paint to
-  avoid a flash. The second (end of `<body>`) injects the toggle button as
-  progressive enhancement — without JS, the OS preference still drives colours
-  via CSS and no dead control is shown. "auto" clears the `data-theme` attribute
-  and the `localStorage` key, handing control back to the OS. (The third script
-  is the interactive terminal prompt — an easter egg, unrelated to theming.)
+- The theme logic lives in two places. One small inline script in `<head>`
+  applies a saved theme from `localStorage` before first paint to avoid a flash;
+  it must stay inline (an external/deferred script would flash). `js/theme-toggle.js`
+  (a `type="module"` script at the end of `<body>`) injects the toggle button as
+  progressive enhancement — without JS, the OS preference still drives colours via
+  CSS and no dead control is shown. "auto" clears the `data-theme` attribute and
+  the `localStorage` key, handing control back to the OS.
 
 Keep these consistent: the `localStorage` key is `"theme"` with values
 `"light"`/`"dark"` (absent = auto), and the override is the `data-theme`
 attribute on `<html>`.
 
+## JavaScript layout and the CSP
+
+`index.html` carries exactly one inline script — the pre-paint theme guard above.
+Everything else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the
+toggle UI) and `terminal.js` (the interactive prompt easter egg, desktop only,
+unrelated to theming). The pure logic each depends on is factored out for testing —
+`theme.js` (`nextTheme()`) and `commands.js` (`reply()`, the denied-command
+flavour) — and exercised by `test/`. The DOM glue in the two UI modules is thin
+and verified in the browser, not unit-tested.
+
+The page sends a strict Content-Security-Policy via a `<meta http-equiv>` tag:
+`default-src 'none'` with `script-src 'self'` (the `js/` modules) plus a single
+`'sha256-…'` for the inline guard, `style-src 'self'`, `img-src 'self'`, and
+`base-uri`/`form-action 'none'`. Two consequences when editing:
+
+- **Edit the inline `<head>` script and its hash changes.** `tools/check-csp.mjs`
+  recomputes the sha256 of every inline script and fails the build if it isn't in
+  the CSP, so CI catches a stale hash. Run `npm run check:csp`, copy the
+  `expected token` it prints into the `script-src` list, and re-run. New external
+  scripts under `js/` need no hash (covered by `'self'`); a `<script>` of a non-JS
+  type like `application/ld+json` is data, not executed, and needs none either.
+- `frame-ancestors` can't be set from a `<meta>` CSP (browsers ignore it there);
+  it belongs on the host if added.
+
 ## Deployment
 
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
 `deploy.sh` (an `rsync -avz --delete` of `index.html`, `robots.txt`,
-`sitemap.xml`, `humans.txt`, `css/` and `assets/`). CI authenticates with the
-`DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
+`sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`). CI authenticates with
+the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
 
 The `TARGET` in `deploy.sh` **must keep its trailing slash** (`html/acurioustale.de/`).
 The deploy key is jailed server-side to a forced `rsync` command that matches that
