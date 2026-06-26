@@ -41,6 +41,15 @@ jobs:
             --filterpattern '.*Trailing slash on void elements.*' \
             --also-check-css --also-check-svg $files
 
+      # vnu only covers the SVG XML; sitemap.xml is otherwise unchecked. Plain
+      # --noout is well-formedness only (no network). xmllint ships in
+      # libxml2-utils, which isn't on the runner by default. Mirrors validate.sh.
+      - name: Validate XML well-formedness
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+          xmllint --noout sitemap.xml
+
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
