@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Local pre-push checks, mirroring the CI "validate" job: vnu (HTML/CSS/SVG),
-# Prettier formatting, svgo (SVG), ShellCheck + shfmt, actionlint, and
-# ESLint (JS + JSON) + markdownlint.
+# xmllint (sitemap.xml well-formedness), Prettier formatting, svgo (SVG),
+# ShellCheck + shfmt, actionlint, and ESLint (JS + JSON) + markdownlint.
 # Usage: ./validate.sh
 #
 # Install the tools once with: brew install vnu prettier shellcheck shfmt actionlint
@@ -22,6 +22,12 @@ echo "==> Validating HTML, CSS and SVG (vnu)"
 # shellcheck disable=SC2086
 vnu --filterpattern '.*Trailing slash on void elements.*' \
 	--also-check-css --also-check-svg $files
+
+echo "==> Checking XML well-formedness (xmllint)"
+# vnu only covers the SVG XML; sitemap.xml is otherwise unchecked. Plain
+# --noout (well-formedness, no network) keeps this gating; full schema
+# validation needs the sitemaps.org XSD and is left out like link checking.
+xmllint --noout sitemap.xml
 
 echo "==> Checking formatting (prettier)"
 prettier --check .
