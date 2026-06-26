@@ -149,6 +149,11 @@ body {
   scrollbar-color: var(--rule) transparent;
 }
 
+.login {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
 .cmd {
   margin: 0;
 }
