@@ -94,10 +94,14 @@ the page background.
 
 `index.html` carries exactly one inline script — the pre-paint theme guard above.
 Everything else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the
-toggle UI) and `terminal.js` (the interactive prompt easter egg, desktop only,
-unrelated to theming). The pure logic each depends on is factored out for testing —
-`theme.js` (`nextTheme()`) and `commands.js` (`reply()`, the denied-command
-flavour) — and exercised by `test/`. The DOM glue in the two UI modules is thin
+toggle UI) and `terminal.js` (the interactive guest-shell easter egg, desktop
+only, unrelated to theming). The card is dressed as a macOS Terminal session and
+the prompt accepts commands: `./whoami.sh` and `ls projects/` reprint the boot
+blocks, `clear` empties the screen (hiding the boot output, like a real terminal),
+`help` lists the working commands, and everything else is denied with a fitting
+shell error. The pure logic each depends on is factored out for testing —
+`theme.js` (`nextTheme()`) and `commands.js` (`reply()` for the denials, `help()`
+for the listing) — and exercised by `test/`. The DOM glue in the two UI modules is thin
 and verified in the browser, not unit-tested.
 
 The page sends a strict Content-Security-Policy **twice**: a `<meta http-equiv>`

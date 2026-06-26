@@ -9,9 +9,13 @@ before first paint (to avoid a flash); the rest lives in two small ES modules in
 `js/`. One injects an auto/light/dark toggle as progressive enhancement — without
 JavaScript the OS `prefers-color-scheme` still drives the colours via CSS and no
 dead control is shown; the chosen theme is persisted in `localStorage`. The other
-turns the prompt into an interactive, always-denied terminal easter egg (desktop
-only). The pure logic behind both (the theme cycle and the command replies) is
-factored into `js/theme.js` and `js/commands.js` and unit-tested in `test/`.
+dresses the card as a macOS Terminal session and turns the prompt into an
+interactive guest-shell easter egg (desktop only): a few commands work —
+`./whoami.sh` and `ls projects/` reprint the boot output, `clear` empties the
+screen and `help` lists them — and everything else is denied with a fitting shell
+error. The pure logic behind both (the theme cycle, and the command replies and
+help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested in
+`test/`.
 
 ```text
 .
