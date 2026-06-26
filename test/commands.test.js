@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { reply } from "../js/commands.js";
+import { reply, help } from "../js/commands.js";
 
 test("privileged commands are denied with permission denied", () => {
   for (const cmd of ["sudo", "su", "doas", "chmod", "chown"]) {
@@ -31,6 +31,16 @@ test("a path-like command reports no such file, naming the last token", () => {
 test("anything else is command not found", () => {
   assert.equal(reply("whoami"), "bash: whoami: command not found");
   assert.equal(reply("vim foo"), "bash: vim: command not found");
+});
+
+// help() must list every command that terminal.js actually handles, so the
+// listing can't drift out of sync with what the prompt accepts.
+test("help lists each working command", () => {
+  const text = help();
+  assert.match(text, /^available commands:/);
+  for (const cmd of ["./whoami.sh", "ls projects/", "clear", "help"]) {
+    assert.ok(text.includes(cmd), `help should mention ${cmd}`);
+  }
 });
 
 // Regression guard for the array-not-object choice in reply(): inherited

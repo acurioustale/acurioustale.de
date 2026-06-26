@@ -294,6 +294,15 @@ a:focus-visible {
   color: var(--muted);
 }
 
+/* The `help` listing: a preformatted block that keeps its aligned columns,
+   in the page's own monospace rather than the UA <pre> default. */
+.help {
+  margin: 0;
+  color: var(--muted);
+  font: inherit;
+  white-space: pre;
+}
+
 @keyframes blink {
   50% {
     opacity: 0;
