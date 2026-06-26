@@ -53,18 +53,27 @@ import { reply, help } from "./commands.js";
   input.addEventListener("input", size);
 
   // Freeze the screen at its boot height so command history scrolls inside
-  // the window instead of growing it. Measured with the scrollback hidden
-  // so the size is the initial card, not whatever has been typed since.
+  // the window instead of growing it. Measured with the scrollback hidden and
+  // the boot output momentarily restored, so the size is always the initial
+  // card at the current width — never whatever has been typed since, and never
+  // the collapsed single line left after clear has hidden the boot output.
   function fitScreen() {
-    var prevDisplay = log.style.display;
+    var prevLogDisplay = log.style.display;
+    var prevBootDisplay = [];
+    for (var i = 0; i < boot.length; i++) {
+      prevBootDisplay.push(boot[i].style.display);
+      boot[i].style.display = "";
+    }
     log.style.display = "none";
     screen.style.height = "auto";
     // Round up and add a hair of slack: the content height is often
     // fractional, and freezing to a value even a sub-pixel short trips the
     // scrollbar at some zoom levels and device pixel ratios.
-    var boot = Math.ceil(screen.getBoundingClientRect().height) + 2;
-    log.style.display = prevDisplay;
-    screen.style.height = boot + "px";
+    var height = Math.ceil(screen.getBoundingClientRect().height) + 2;
+    log.style.display = prevLogDisplay;
+    for (var j = 0; j < boot.length; j++)
+      boot[j].style.display = prevBootDisplay[j];
+    screen.style.height = height + "px";
     screen.scrollTop = screen.scrollHeight;
   }
   fitScreen();
