@@ -35,8 +35,14 @@
       media="(prefers-color-scheme: light)"
     />
 
-    <!-- Icons. SVG for modern browsers, PNG for iOS home screen. -->
+    <!-- Icons. SVG for modern browsers, PNG fallback for the rest, PNG for iOS home screen. -->
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="icon"
+      href="assets/favicon-32.png"
+      sizes="32x32"
+      type="image/png"
+    />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
 
     <!-- Open Graph / Twitter link previews. -->
