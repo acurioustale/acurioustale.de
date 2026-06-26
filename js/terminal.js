@@ -1,0 +1,160 @@
+import { reply } from "./commands.js";
+
+// Easter egg: turn the static prompt into a real input as progressive
+// enhancement. Without JS the blinking cursor stays and nothing breaks.
+// Most commands are denied, with the flavour reply() picks. The few that
+// work replay the page's own output: clear resets the screen, ./whoami.sh
+// and ls projects/ reprint the whoami card and the projects list.
+(function () {
+  var last = document.querySelector(".prompt-last");
+  if (!last) return;
+
+  // Desktop only: on touch devices the static cursor is left untouched so
+  // a stray tap never pops up the on-screen keyboard.
+  if (!window.matchMedia || !window.matchMedia("(pointer: fine)").matches)
+    return;
+
+  var screen = last.parentNode;
+  var cursor = last.querySelector(".cursor");
+
+  // Scrollback for echoed commands and their replies. The prompt line
+  // stays at the bottom; new output is inserted just above it.
+  var log = document.createElement("div");
+  log.setAttribute("aria-live", "polite");
+  screen.insertBefore(log, last);
+
+  var input = document.createElement("input");
+  input.type = "text";
+  input.className = "cmd-input";
+  input.setAttribute("aria-label", "Terminal — type a command");
+  input.autocomplete = "off";
+  input.autocapitalize = "off";
+  input.spellcheck = false;
+  last.insertBefore(input, cursor);
+
+  // Grow the field with its content so the block cursor trails the text.
+  function size() {
+    input.style.width = input.value.length + "ch";
+  }
+  size();
+  input.addEventListener("input", size);
+
+  // Freeze the screen at its boot height so command history scrolls inside
+  // the window instead of growing it. Measured with the scrollback hidden
+  // so the size is the initial card, not whatever has been typed since.
+  function fitScreen() {
+    var prevDisplay = log.style.display;
+    log.style.display = "none";
+    screen.style.height = "auto";
+    // Round up and add a hair of slack: the content height is often
+    // fractional, and freezing to a value even a sub-pixel short trips the
+    // scrollbar at some zoom levels and device pixel ratios.
+    var boot = Math.ceil(screen.getBoundingClientRect().height) + 2;
+    log.style.display = prevDisplay;
+    screen.style.height = boot + "px";
+    screen.scrollTop = screen.scrollHeight;
+  }
+  fitScreen();
+  // Recompute on resize: the card reflows, changing the boot height.
+  window.addEventListener("resize", fitScreen);
+
+  // Echo the typed command, reusing the prompt/run styling. textContent
+  // only — never innerHTML — so typed input can't inject markup.
+  function echoLine(raw) {
+    var echo = document.createElement("p");
+    echo.className = "cmd";
+    var p = document.createElement("span");
+    p.className = "prompt";
+    p.textContent = "$";
+    var c = document.createElement("span");
+    c.className = "run";
+    c.textContent = " " + raw;
+    echo.appendChild(p);
+    echo.appendChild(c);
+    log.appendChild(echo);
+  }
+
+  // Replay a static block (the whoami card or the projects list) as output
+  // by cloning the original node, so it stays in sync with the page.
+  function echoBlock(selector) {
+    var node = document.querySelector(selector);
+    if (!node) return;
+    var clone = node.cloneNode(true);
+    // Demote any cloned <h1> so replayed output doesn't add duplicate
+    // top-level headings to the document outline.
+    var heading = clone.querySelector("h1");
+    if (heading) {
+      var p = document.createElement("p");
+      p.className = heading.className;
+      p.textContent = heading.textContent;
+      heading.replaceWith(p);
+    }
+    log.appendChild(clone);
+  }
+
+  function replyLine(text) {
+    var out = document.createElement("p");
+    out.className = "reply";
+    out.textContent = text;
+    log.appendChild(out);
+  }
+
+  function run() {
+    var raw = input.value;
+    var cmd = raw.trim();
+    if (!cmd) return;
+
+    // The one command that works: clear wipes the scrollback, leaving the
+    // page in its initial boot state (the whoami card and projects).
+    if (cmd === "clear") {
+      log.textContent = "";
+      input.value = "";
+      size();
+      return;
+    }
+
+    echoLine(raw);
+
+    // Commands that produce real output replay the matching static block;
+    // everything else is denied with the flavour reply() picks.
+    if (cmd === "./whoami.sh") {
+      echoBlock(".whoami");
+    } else if (cmd === "ls projects/" || cmd === "ls projects") {
+      echoBlock(".projects");
+    } else {
+      replyLine(reply(cmd));
+    }
+
+    input.value = "";
+    size();
+    // Keep the prompt in view as history scrolls up.
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      run();
+    }
+  });
+
+  // Click the prompt line to focus it.
+  last.addEventListener("click", function () {
+    input.focus();
+  });
+
+  // Type anywhere to focus the prompt — the first keystroke lands in the
+  // field with no click needed, and refocuses it if focus drifted away.
+  // Ignore shortcuts and non-text keys so browser combos still work, and
+  // never steal focus from a real control: a button activates on Space's
+  // keyup, so grabbing focus on keydown would swallow the theme toggle.
+  document.addEventListener("keydown", function (e) {
+    var ae = document.activeElement;
+    if (ae && ae !== document.body) return;
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    input.focus({ preventScroll: true });
+  });
+
+  // Focus on load so typing works right away.
+  input.focus({ preventScroll: true });
+})();

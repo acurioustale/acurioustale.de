@@ -1,11 +1,15 @@
 {
   "name": "acurioustale.de",
   "private": true,
+  "type": "module",
   "description": "Lint tooling for the acurioustale.de landing page. The site itself has no build step; this only provides ESLint and markdownlint-cli2, which are npm-only.",
   "scripts": {
     "lint:js": "eslint .",
     "lint:md": "markdownlint-cli2",
-    "lint": "npm run lint:js && npm run lint:md"
+    "lint": "npm run lint:js && npm run lint:md",
+    "test": "node --test",
+    "check:csp": "node tools/check-csp.mjs",
+    "check:og": "node tools/check-og-image.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

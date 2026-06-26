@@ -3,6 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Content Security Policy. Everything is same-origin: scripts and styles
+         are served from this host (script-src/style-src 'self'), the only inline
+         script is the pre-paint theme guard below, allowed by its sha256 hash.
+         The JSON-LD block is data, not executable, so it needs no hash. The hash
+         is checked in CI (tools/check-csp.mjs) so it can never drift. Note:
+         frame-ancestors is ignored in a meta CSP and is set at the host. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'sha256-zdc3Udp7lG0qD5w3OgDbBM0wt/MsY0bdjNAEz5uOQ0Q='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+
     <title>Markus Spitzner — me@acurioustale.de</title>
     <meta
       name="description"
@@ -161,258 +173,10 @@
         </p>
       </div>
     </main>
-    <script>
-      // Inject the theme toggle as progressive enhancement: without JS the
-      // OS preference still drives light/dark via CSS, and no dead control shows.
-      // The toggle cycles through auto, light and dark; "auto" clears the
-      // override and hands control back to the OS preference.
-      (function () {
-        var root = document.documentElement;
-        var bar = document.querySelector(".titlebar");
-        if (!bar) return;
-
-        var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
-
-        // The current explicit override, or "auto" when none is set.
-        function mode() {
-          var attr = root.getAttribute("data-theme");
-          return attr === "light" || attr === "dark" ? attr : "auto";
-        }
-
-        // Cycle order. "auto" looks identical to the OS preference, so one step
-        // of a three-way cycle is always colour-neutral. Visiting the theme that
-        // matches the OS last puts that neutral step on the wrap back to auto,
-        // so every other click visibly flips the colour (no dead first click).
-        function next(m) {
-          var osLight = window.matchMedia(
-            "(prefers-color-scheme: light)",
-          ).matches;
-          var order = osLight
-            ? ["auto", "dark", "light"]
-            : ["auto", "light", "dark"];
-          return order[(order.indexOf(m) + 1) % order.length];
-        }
-
-        function apply(to) {
-          try {
-            if (to === "auto") localStorage.removeItem("theme");
-            else localStorage.setItem("theme", to);
-          } catch (e) {}
-          if (to === "auto") root.removeAttribute("data-theme");
-          else root.setAttribute("data-theme", to);
-        }
-
-        var btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "theme-toggle";
-
-        function render() {
-          var m = mode();
-          var label = "Theme: " + m + " — switch to " + next(m);
-          btn.textContent = GLYPH[m];
-          btn.setAttribute("aria-label", label);
-          btn.title = label;
-        }
-
-        btn.addEventListener("click", function () {
-          apply(next(mode()));
-          render();
-        });
-
-        // Re-render the glyph on OS changes while in auto mode (it follows the OS).
-        window
-          .matchMedia("(prefers-color-scheme: light)")
-          .addEventListener("change", function () {
-            if (mode() === "auto") render();
-          });
-
-        bar.appendChild(btn);
-        render();
-      })();
-    </script>
-    <script>
-      // Easter egg: turn the static prompt into a real input as progressive
-      // enhancement. Without JS the blinking cursor stays and nothing breaks.
-      // Most commands are denied, with the flavour reply() picks. The few that
-      // work replay the page's own output: clear resets the screen, ./whoami.sh
-      // and ls projects/ reprint the whoami card and the projects list.
-      (function () {
-        var last = document.querySelector(".prompt-last");
-        if (!last) return;
-
-        // Desktop only: on touch devices the static cursor is left untouched so
-        // a stray tap never pops up the on-screen keyboard.
-        if (!window.matchMedia || !window.matchMedia("(pointer: fine)").matches)
-          return;
-
-        var screen = last.parentNode;
-        var cursor = last.querySelector(".cursor");
-
-        // Scrollback for echoed commands and their replies. The prompt line
-        // stays at the bottom; new output is inserted just above it.
-        var log = document.createElement("div");
-        log.setAttribute("aria-live", "polite");
-        screen.insertBefore(log, last);
-
-        var input = document.createElement("input");
-        input.type = "text";
-        input.className = "cmd-input";
-        input.setAttribute("aria-label", "Terminal — type a command");
-        input.autocomplete = "off";
-        input.autocapitalize = "off";
-        input.spellcheck = false;
-        last.insertBefore(input, cursor);
-
-        // Grow the field with its content so the block cursor trails the text.
-        function size() {
-          input.style.width = input.value.length + "ch";
-        }
-        size();
-        input.addEventListener("input", size);
-
-        // Freeze the screen at its boot height so command history scrolls inside
-        // the window instead of growing it. Measured with the scrollback hidden
-        // so the size is the initial card, not whatever has been typed since.
-        function fitScreen() {
-          var prevDisplay = log.style.display;
-          log.style.display = "none";
-          screen.style.height = "auto";
-          // Round up and add a hair of slack: the content height is often
-          // fractional, and freezing to a value even a sub-pixel short trips the
-          // scrollbar at some zoom levels and device pixel ratios.
-          var boot = Math.ceil(screen.getBoundingClientRect().height) + 2;
-          log.style.display = prevDisplay;
-          screen.style.height = boot + "px";
-          screen.scrollTop = screen.scrollHeight;
-        }
-        fitScreen();
-        // Recompute on resize: the card reflows, changing the boot height.
-        window.addEventListener("resize", fitScreen);
-
-        // Pick the denial that fits: privileged → permission denied, a bare ls
-        // is locked down, ls of any other path errors like ls, anything else
-        // that looks like a path → no such file, otherwise command not found.
-        function reply(cmd) {
-          var argv = cmd.split(/\s+/);
-          // An array, not an object-as-set: a plain object would match inherited
-          // Object.prototype members (toString, constructor, …) as commands.
-          var PRIV = ["sudo", "su", "doas", "chmod", "chown"];
-          if (PRIV.indexOf(argv[0]) !== -1)
-            return argv[0] + ": permission denied";
-          if (argv[0] === "ls") {
-            if (argv.length < 2) return "ls: .: Permission denied";
-            return (
-              "ls: " + argv.slice(1).join(" ") + ": No such file or directory"
-            );
-          }
-          if (cmd.indexOf("/") !== -1) {
-            return (
-              "bash: " + argv[argv.length - 1] + ": No such file or directory"
-            );
-          }
-          return "bash: " + argv[0] + ": command not found";
-        }
-
-        // Echo the typed command, reusing the prompt/run styling. textContent
-        // only — never innerHTML — so typed input can't inject markup.
-        function echoLine(raw) {
-          var echo = document.createElement("p");
-          echo.className = "cmd";
-          var p = document.createElement("span");
-          p.className = "prompt";
-          p.textContent = "$";
-          var c = document.createElement("span");
-          c.className = "run";
-          c.textContent = " " + raw;
-          echo.appendChild(p);
-          echo.appendChild(c);
-          log.appendChild(echo);
-        }
-
-        // Replay a static block (the whoami card or the projects list) as output
-        // by cloning the original node, so it stays in sync with the page.
-        function echoBlock(selector) {
-          var node = document.querySelector(selector);
-          if (!node) return;
-          var clone = node.cloneNode(true);
-          // Demote any cloned <h1> so replayed output doesn't add duplicate
-          // top-level headings to the document outline.
-          var heading = clone.querySelector("h1");
-          if (heading) {
-            var p = document.createElement("p");
-            p.className = heading.className;
-            p.textContent = heading.textContent;
-            heading.replaceWith(p);
-          }
-          log.appendChild(clone);
-        }
-
-        function replyLine(text) {
-          var out = document.createElement("p");
-          out.className = "reply";
-          out.textContent = text;
-          log.appendChild(out);
-        }
-
-        function run() {
-          var raw = input.value;
-          var cmd = raw.trim();
-          if (!cmd) return;
-
-          // The one command that works: clear wipes the scrollback, leaving the
-          // page in its initial boot state (the whoami card and projects).
-          if (cmd === "clear") {
-            log.textContent = "";
-            input.value = "";
-            size();
-            return;
-          }
-
-          echoLine(raw);
-
-          // Commands that produce real output replay the matching static block;
-          // everything else is denied with the flavour reply() picks.
-          if (cmd === "./whoami.sh") {
-            echoBlock(".whoami");
-          } else if (cmd === "ls projects/" || cmd === "ls projects") {
-            echoBlock(".projects");
-          } else {
-            replyLine(reply(cmd));
-          }
-
-          input.value = "";
-          size();
-          // Keep the prompt in view as history scrolls up.
-          screen.scrollTop = screen.scrollHeight;
-        }
-
-        input.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            run();
-          }
-        });
-
-        // Click the prompt line to focus it.
-        last.addEventListener("click", function () {
-          input.focus();
-        });
-
-        // Type anywhere to focus the prompt — the first keystroke lands in the
-        // field with no click needed, and refocuses it if focus drifted away.
-        // Ignore shortcuts and non-text keys so browser combos still work, and
-        // never steal focus from a real control: a button activates on Space's
-        // keyup, so grabbing focus on keydown would swallow the theme toggle.
-        document.addEventListener("keydown", function (e) {
-          var ae = document.activeElement;
-          if (ae && ae !== document.body) return;
-          if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
-          input.focus({ preventScroll: true });
-        });
-
-        // Focus on load so typing works right away.
-        input.focus({ preventScroll: true });
-      })();
-    </script>
+    <!-- Theming and the terminal easter egg, extracted to modules so their pure
+         logic (the theme cycle, the command replies) can be unit-tested. Both
+         are progressive enhancement and load deferred (type="module"). -->
+    <script type="module" src="js/theme-toggle.js"></script>
+    <script type="module" src="js/terminal.js"></script>
   </body>
 </html>
