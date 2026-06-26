@@ -3,6 +3,8 @@
 # Usage: ./deploy.sh [--dry-run]
 set -euo pipefail
 
+cd "$(dirname "$0")"
+
 REMOTE="web4186@http2.core-networks.de"
 TARGET="html/acurioustale.de/"
 

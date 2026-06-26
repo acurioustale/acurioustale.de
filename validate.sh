@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Local pre-push checks, mirroring the CI "validate" job: vnu (HTML/CSS/SVG),
-# xmllint (sitemap.xml well-formedness), Prettier formatting, svgo (SVG),
-# ShellCheck + shfmt, actionlint, ESLint (JS + JSON) + stylelint (CSS) +
-# markdownlint, the unit tests (node --test), and the CSP and og-image guards.
+# xmllint (sitemap.xml well-formedness), Prettier formatting, ShellCheck + shfmt,
+# actionlint, ESLint (JS + JSON) + stylelint (CSS) + markdownlint, the unit tests
+# (node --test), the CSP and og-image guards, and svgo (SVG optimisation).
 # Usage: ./validate.sh
 #
 # Node + npm are required (the repo's own tooling, tests and guards run on them).
@@ -30,8 +30,8 @@ require_version() {
 	case "$got" in
 	*"$want"*) ;;
 	*)
-		echo "  $name version mismatch: want $want, got: $got"
-		echo "  install the pinned version (see deploy.yml) so local matches CI"
+		echo "  $name version mismatch: want $want, got: $got" >&2
+		echo "  install the pinned version (see deploy.yml) so local matches CI" >&2
 		exit 1
 		;;
 	esac
@@ -83,15 +83,6 @@ else
 	skip prettier "formatting check"
 fi
 
-echo "==> Checking SVG optimisation (svgo)"
-for f in assets/favicon.svg og-image.src.svg; do
-	npx svgo --config svgo.config.mjs -i "$f" -o - | diff -q - "$f" >/dev/null ||
-		{
-			echo "  $f is not optimised; run: npx svgo --config svgo.config.mjs $f"
-			exit 1
-		}
-done
-
 if have shellcheck; then
 	echo "==> Linting shell scripts (shellcheck)"
 	shellcheck deploy.sh validate.sh
@@ -126,5 +117,14 @@ npm run --silent check:csp
 
 echo "==> Checking the og-image dimensions"
 npm run --silent check:og
+
+echo "==> Checking SVG optimisation (svgo)"
+for f in assets/favicon.svg og-image.src.svg; do
+	npx svgo --config svgo.config.mjs -i "$f" -o - | diff -q - "$f" >/dev/null ||
+		{
+			echo "  $f is not optimised; run: npx svgo --config svgo.config.mjs $f"
+			exit 1
+		}
+done
 
 echo "==> All checks passed"

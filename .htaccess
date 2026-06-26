@@ -37,8 +37,11 @@
   AddType image/svg+xml .svg
 </IfModule>
 
-# ─── Deny dotfiles (defense in depth) ──────────────────────────────────────────
-# Block this .htaccess and any stray .env from ever being served.
-<FilesMatch "^\.">
+# ─── Deny sensitive files (defense in depth) ───────────────────────────────────
+# Block dotfiles (this .htaccess, any stray .env) from being served. This is a
+# static site with no PHP, so config.php and *.example never exist here — they're
+# denied anyway to match the shared-host sibling (comparebuilds.app) and guard
+# against a stray copy or template ever landing in the web root.
+<FilesMatch "(^\.|\.example$|^config\.php$)">
   Require all denied
 </FilesMatch>
