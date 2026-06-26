@@ -21,12 +21,13 @@ factored into `js/theme.js` and `js/commands.js` and unit-tested in `test/`.
 ├── test/               ← unit tests for the pure logic (node --test)
 ├── tools/              ← dev-time CI checks (CSP hash, og-image dimensions)
 ├── assets/             ← favicon, apple-touch icon, Open Graph share image
+├── .htaccess           ← Apache security headers + production CSP (deployed)
 ├── robots.txt          ← allow-all crawl rule + sitemap pointer
 ├── sitemap.xml         ← single-page sitemap
 ├── humans.txt          ← the people behind the site (linked via rel="author")
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
 ├── lychee.toml         ← link-checker config (used by the links workflow)
-├── package.json        ← npm-only lint tools (ESLint, markdownlint-cli2, svgo)
+├── package.json        ← npm-only lint tools (ESLint, stylelint, markdownlint, svgo)
 ├── .github/workflows/  ← deploy (gating checks) + links (lychee) CI
 ├── validate.sh         ← run all gating CI checks locally
 └── deploy.sh           ← rsync deploy to the web host
@@ -47,9 +48,15 @@ then run the script:
 
 ```bash
 brew install vnu prettier shellcheck shfmt actionlint   # one-time
-npm install                                             # one-time (ESLint, markdownlint-cli2, svgo)
+npm install                                             # one-time (ESLint, stylelint, markdownlint, svgo)
 ./validate.sh
 ```
+
+`validate.sh` skips any of the brew-installed CLIs that aren't present (with a
+notice — CI always enforces them), so it stays runnable on a fresh checkout;
+Node and npm are the only hard requirements. When a pinned tool (Prettier, shfmt,
+actionlint) _is_ present, it asserts the version matches the one in `deploy.yml`,
+so a drifted local tool is caught before it surfaces as a mystery CI reformat.
 
 Links are checked separately (they need the network and external hosts flake, so
 they never gate a deploy) — on pull requests and a weekly schedule via the
@@ -81,17 +88,17 @@ Pushing to `main` deploys automatically. The
 validates the HTML, CSS and SVG with the
 [Nu Html Checker](https://validator.github.io/validator/), checks formatting with
 Prettier, keeps the SVGs optimised with svgo, lints the shell scripts
-(ShellCheck, shfmt), the workflows (actionlint), and the JS, JSON and Markdown
-(ESLint, markdownlint-cli2), runs the unit tests (`node --test`), and checks the
-CSP hash and og-image dimensions. Only if everything passes does it run
-`deploy.sh`. The workflow runs on every push to `main` (and can be triggered
+(ShellCheck, shfmt), the workflows (actionlint), and the JS, JSON, CSS and
+Markdown (ESLint, stylelint, markdownlint-cli2), runs the unit tests
+(`node --test`), and checks the CSP hash and og-image dimensions. Only if
+everything passes does it run `deploy.sh`. The workflow runs on every push to `main` (and can be triggered
 manually from the Actions tab); pull requests run the same gate without deploying.
 Link checking runs separately (see Development) so flaky external hosts never
 block a deploy.
 
-`deploy.sh` is an `rsync -avz --delete` of `index.html`, `robots.txt`,
-`sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/` to the web root on the
-host:
+`deploy.sh` is an `rsync -avz --delete` of `index.html`, `.htaccess`,
+`robots.txt`, `sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/` to the web
+root on the host:
 
 ```text
 web4186@http2.core-networks.de:html/acurioustale.de/
@@ -115,9 +122,24 @@ To deploy by hand instead (uses your own SSH access), run:
 
 The `--delete` flag keeps the deployed `css/` and `assets/` directories in sync —
 files removed locally are removed on the server too. Only the files listed above
-(`index.html`, `robots.txt`, `sitemap.xml`, `humans.txt`, `css/`, `js/` and
-`assets/`) are pushed, so unrelated files elsewhere in the web root are left
-untouched.
+(`index.html`, `.htaccess`, `robots.txt`, `sitemap.xml`, `humans.txt`, `css/`,
+`js/` and `assets/`) are pushed, so unrelated files elsewhere in the web root are
+left untouched.
+
+### Security headers
+
+`.htaccess` sets the production security headers the static files can't set
+themselves: a `Content-Security-Policy` plus `X-Content-Type-Options`,
+`X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`. The CSP is
+all-same-origin (`default-src 'none'`, `script-src`/`style-src`/`img-src 'self'`)
+with the one inline script — the pre-paint theme guard — allowlisted by its
+`sha256` hash. This header CSP is the production superset of the `<meta>` CSP in
+`index.html`: it adds `frame-ancestors 'none'` and `upgrade-insecure-requests`,
+which a meta tag can't express. The meta stays as the locally-testable baseline
+(the python dev server doesn't apply `.htaccess`), and `tools/check-csp.mjs`
+asserts the inline-script hash matches in both — so editing that script fails the
+build until both are updated. Verify the live headers after a deploy with
+`curl -sI https://acurioustale.de/ | grep -i 'content-security\|x-frame'`.
 
 ## License
 
