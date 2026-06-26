@@ -11,13 +11,13 @@
   <circle cx="146" cy="112" r="7" fill="#e24b4a"/>
   <circle cx="172" cy="112" r="7" fill="#ef9f27"/>
   <circle cx="198" cy="112" r="7" fill="#1d9e75"/>
-  <text x="236" y="119" fill="#888780" font-size="21">me@acurioustale.de: ~</text>
+  <text x="236" y="119" fill="#888780" font-size="21">Guest — -crstl</text>
   <text x="150" y="208" font-size="27"><tspan fill="#5dcaa5">$</tspan><tspan xml:space="preserve" fill="#c0dd97"> ./whoami.sh</tspan></text>
-  <g xml:space="preserve" fill="#1d9e75" font-size="27">
-    <text x="150" y="270"> __  __  ___</text>
-    <text x="150" y="304">|  \/  |/ __|</text>
-    <text x="150" y="338">| |\/| |\__ \</text>
-    <text x="150" y="372">|_|  |_||___/</text>
+  <g fill="#1d9e75" font-size="27">
+    <text xml:space="preserve" x="150" y="270"> __  __  ___</text>
+    <text xml:space="preserve" x="150" y="304">|  \/  |/ __|</text>
+    <text xml:space="preserve" x="150" y="338">| |\/| |\__ \</text>
+    <text xml:space="preserve" x="150" y="372">|_|  |_||___/</text>
   </g>
   <text x="470" y="278" fill="#9fe1cb" font-size="40">markus spitzner</text>
   <path stroke="#5f5e5a" d="M470 300h570"/>

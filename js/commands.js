@@ -1,6 +1,19 @@
 // Pure terminal command logic, extracted so it can be unit-tested without a DOM
 // (see test/commands.test.js). The DOM wiring lives in terminal.js.
 
+// The commands that actually do something, printed by `help` so the prompt is
+// discoverable — without it, a cleared screen gives no hint of what to type.
+// Kept here next to reply() so a test can assert it lists every working command.
+export function help() {
+  return [
+    "available commands:",
+    "  ./whoami.sh    print the whoami card",
+    "  ls projects/   list projects",
+    "  clear          clear the screen",
+    "  help           show this help",
+  ].join("\n");
+}
+
 // Pick the denial that fits: privileged → permission denied, a bare ls is
 // locked down, ls of any other path errors like ls, anything else that looks
 // like a path → no such file, otherwise command not found.

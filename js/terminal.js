@@ -1,10 +1,11 @@
-import { reply } from "./commands.js";
+import { reply, help } from "./commands.js";
 
 // Easter egg: turn the static prompt into a real input as progressive
 // enhancement. Without JS the blinking cursor stays and nothing breaks.
 // Most commands are denied, with the flavour reply() picks. The few that
-// work replay the page's own output: clear resets the screen, ./whoami.sh
-// and ls projects/ reprint the whoami card and the projects list.
+// work: clear wipes the whole screen (the boot card included, like a real
+// terminal), help lists the commands, and ./whoami.sh and ls projects/
+// reprint the whoami card and the projects list.
 (function () {
   var last = document.querySelector(".prompt-last");
   if (!last) return;
@@ -22,6 +23,18 @@ import { reply } from "./commands.js";
   var log = document.createElement("div");
   log.setAttribute("aria-live", "polite");
   screen.insertBefore(log, last);
+
+  // The page's boot output — the login line, the whoami card, the projects
+  // list and their command lines — is static markup above the scrollback.
+  // clear hides all of it so the screen truly empties; the originals stay in
+  // the DOM (just hidden) so echoBlock can still clone them when a command
+  // reprints. Everything except the scrollback and the live prompt counts.
+  var boot = [];
+  for (var b = 0; b < screen.children.length; b++) {
+    if (screen.children[b] !== log && screen.children[b] !== last) {
+      boot.push(screen.children[b]);
+    }
+  }
 
   var input = document.createElement("input");
   input.type = "text";
@@ -80,6 +93,9 @@ import { reply } from "./commands.js";
     var node = document.querySelector(selector);
     if (!node) return;
     var clone = node.cloneNode(true);
+    // The original is hidden once clear has run; cloneNode copies that inline
+    // display:none, so reset it or the reprinted block would be invisible.
+    clone.style.display = "";
     // Demote any cloned <h1> so replayed output doesn't add duplicate
     // top-level headings to the document outline.
     var heading = clone.querySelector("h1");
@@ -99,15 +115,26 @@ import { reply } from "./commands.js";
     log.appendChild(out);
   }
 
+  // The help listing is a preformatted block so its aligned columns and line
+  // breaks survive (a <p> would collapse them onto one line).
+  function helpBlock() {
+    var out = document.createElement("pre");
+    out.className = "help";
+    out.textContent = help();
+    log.appendChild(out);
+  }
+
   function run() {
     var raw = input.value;
     var cmd = raw.trim();
     if (!cmd) return;
 
-    // The one command that works: clear wipes the scrollback, leaving the
-    // page in its initial boot state (the whoami card and projects).
+    // clear empties the screen: wipe the scrollback and hide the boot output,
+    // leaving just the prompt, like a real terminal. Re-running a command
+    // reprints the relevant block.
     if (cmd === "clear") {
       log.textContent = "";
+      for (var k = 0; k < boot.length; k++) boot[k].style.display = "none";
       input.value = "";
       size();
       return;
@@ -116,11 +143,13 @@ import { reply } from "./commands.js";
     echoLine(raw);
 
     // Commands that produce real output replay the matching static block;
-    // everything else is denied with the flavour reply() picks.
+    // help lists them; everything else is denied with reply()'s flavour.
     if (cmd === "./whoami.sh") {
       echoBlock(".whoami");
     } else if (cmd === "ls projects/" || cmd === "ls projects") {
       echoBlock(".projects");
+    } else if (cmd === "help") {
+      helpBlock();
     } else {
       replyLine(reply(cmd));
     }
