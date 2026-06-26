@@ -396,9 +396,12 @@
 
         // Type anywhere to focus the prompt — the first keystroke lands in the
         // field with no click needed, and refocuses it if focus drifted away.
-        // Ignore shortcuts and non-text keys so browser combos still work.
+        // Ignore shortcuts and non-text keys so browser combos still work, and
+        // never steal focus from a real control: a button activates on Space's
+        // keyup, so grabbing focus on keydown would swallow the theme toggle.
         document.addEventListener("keydown", function (e) {
-          if (document.activeElement === input) return;
+          var ae = document.activeElement;
+          if (ae && ae !== document.body) return;
           if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
           input.focus({ preventScroll: true });
         });
