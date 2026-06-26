@@ -87,8 +87,9 @@ jobs:
           "$RUNNER_TEMP/actionlint" -color
 
       # ESLint (the browser modules in js/ and the inline JS in index.html, plus
-      # JSON via @eslint/json) and markdownlint-cli2, pinned via package-lock.json.
-      - name: Lint JS, JSON and Markdown
+      # JSON via @eslint/json), stylelint (css/) and markdownlint-cli2, all pinned
+      # via package-lock.json.
+      - name: Lint JS, JSON, CSS and Markdown
         run: npm run lint
 
       # Unit tests for the extracted pure logic (the theme cycle and the
