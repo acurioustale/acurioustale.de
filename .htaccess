@@ -1,0 +1,44 @@
+# acurioustale.de — Apache config for the static site.
+# Shipped to the web root by deploy.sh. The host is Apache (shared with
+# comparebuilds.app); this adds the production security headers the static
+# files can't set themselves.
+
+# ─── Security headers ──────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+  # Content-Security-Policy. Everything is same-origin: the stylesheet and the
+  # js/ modules are served from this host (script-src/style-src 'self'), and the
+  # one inline script (the pre-paint theme guard in index.html) is allowlisted by
+  # its sha256 hash. This is the production-grade superset of the <meta> CSP in
+  # index.html — it adds frame-ancestors and upgrade-insecure-requests, which a
+  # meta CSP can't express. The meta stays as the locally-testable baseline (the
+  # python dev server doesn't apply .htaccess), and tools/check-csp.mjs asserts
+  # the inline-script hash matches in BOTH places, so they can't drift.
+  # IMPORTANT: the hash is over the inline script's exact bytes — edit that script
+  # and you must recompute it here and in index.html (check-csp.mjs prints it).
+  Header always set Content-Security-Policy "default-src 'none'; script-src 'self' 'sha256-zdc3Udp7lG0qD5w3OgDbBM0wt/MsY0bdjNAEz5uOQ0Q='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # Long-cache the static images: the favicon, apple-touch icon and OG card are
+  # stable (changed only by an explicit redeploy). Markup, CSS and JS are left at
+  # the server default so a deploy is picked up immediately (no filename hashing).
+  <FilesMatch "\.(png|svg|ico|jpg|jpeg|webp|gif)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>
+
+# ─── MIME types ────────────────────────────────────────────────────────────────
+# Make sure the SVG favicon is served as image/svg+xml even on a host that
+# doesn't map it by default.
+<IfModule mod_mime.c>
+  AddType image/svg+xml .svg
+</IfModule>
+
+# ─── Deny dotfiles (defense in depth) ──────────────────────────────────────────
+# Block this .htaccess and any stray .env from ever being served.
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>

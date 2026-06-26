@@ -22,20 +22,23 @@ python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
 There is no build step for the site — edit the files and reload the browser. CI
 validates the HTML, CSS and SVG (Nu Html Checker), checks formatting (Prettier),
 keeps the SVGs optimised (svgo), lints the shell scripts (ShellCheck and shfmt),
-the workflows (actionlint), the JS and JSON (ESLint) and the Markdown
-(markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`) and the
-CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`) on
-every push and pull request, and deploys are gated on all of them passing. Run
+the workflows (actionlint), the JS and JSON (ESLint), the CSS (stylelint) and the
+Markdown (markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`)
+and the CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`)
+on every push and pull request, and deploys are gated on all of them passing. Run
 the same checks locally with `./validate.sh` (needs `brew install vnu prettier
 shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: ESLint,
-markdownlint-cli2 and svgo). Link checking is separate and non-gating — the
-`links` workflow runs lychee on pull requests and a weekly schedule.
-ESLint/markdownlint/svgo are the only tools needing `package.json`; the tests and
-guards use only Node's standard library, and the site itself still ships no
-dependencies. Prettier uses its defaults; keep the Prettier, shfmt and actionlint
-versions pinned in `deploy.yml` in sync with `validate.sh`, which asserts the
-local versions match (so drift is caught before push). `.claude/launch.json`
-defines a "site" launch config that serves on port 4174.
+stylelint, markdownlint-cli2 and svgo). `validate.sh` skips any brew CLI that
+isn't installed (with a notice — CI still enforces it) so it runs on a fresh
+checkout; Node and npm are the only hard requirements. Link checking is separate
+and non-gating — the `links` workflow runs lychee on pull requests and a weekly
+schedule. ESLint/stylelint/markdownlint/svgo are the only tools needing
+`package.json`; the tests and guards use only Node's standard library, and the
+site itself still ships no dependencies. Prettier uses its defaults; keep the
+Prettier, shfmt and actionlint versions pinned in `deploy.yml` in sync with
+`validate.sh`, which asserts the local versions match when present (so drift is
+caught before push). `.claude/launch.json` defines a "site" launch config that
+serves on port 4174.
 
 `npm audit` reports two moderate advisories for `js-yaml 4.1.1`, pulled in by
 `markdownlint-cli2`. They are accepted, not fixable here: the only patched line
@@ -75,11 +78,17 @@ by editing the toggle inline.
   (a `type="module"` script at the end of `<body>`) injects the toggle button as
   progressive enhancement — without JS, the OS preference still drives colours via
   CSS and no dead control is shown. "auto" clears the `data-theme` attribute and
-  the `localStorage` key, handing control back to the OS.
+  the `localStorage` key, handing control back to the OS. What counts as a valid
+  override is `normalizeMode()` in `js/theme.js` (reused by the toggle); the inline
+  guard duplicates that check by hand only because it must run before any module
+  can load.
 
 Keep these consistent: the `localStorage` key is `"theme"` with values
 `"light"`/`"dark"` (absent = auto), and the override is the `data-theme`
-attribute on `<html>`.
+attribute on `<html>`. The two `<meta name="theme-color">` values (one per
+`prefers-color-scheme`) must equal the CSS `--page-bg` light/dark sides;
+`test/themeColor.test.js` enforces that so the browser chrome can't drift from
+the page background.
 
 ## JavaScript layout and the CSP
 
@@ -91,24 +100,34 @@ unrelated to theming). The pure logic each depends on is factored out for testin
 flavour) — and exercised by `test/`. The DOM glue in the two UI modules is thin
 and verified in the browser, not unit-tested.
 
-The page sends a strict Content-Security-Policy via a `<meta http-equiv>` tag:
-`default-src 'none'` with `script-src 'self'` (the `js/` modules) plus a single
-`'sha256-…'` for the inline guard, `style-src 'self'`, `img-src 'self'`, and
-`base-uri`/`form-action 'none'`. Two consequences when editing:
+The page sends a strict Content-Security-Policy **twice**: a `<meta http-equiv>`
+tag in `index.html` and an HTTP header in `.htaccess`. Both are `default-src
+'none'` with `script-src 'self'` (the `js/` modules) plus a single `'sha256-…'`
+for the inline guard, `style-src 'self'`, `img-src 'self'`, and
+`base-uri`/`form-action 'none'`. The `.htaccess` header is the production
+superset — it adds `frame-ancestors 'none'` and `upgrade-insecure-requests`,
+which a meta CSP can't express — while the meta stays as the baseline the python
+dev server actually applies (so CSP is testable locally). Three consequences when
+editing:
 
 - **Edit the inline `<head>` script and its hash changes.** `tools/check-csp.mjs`
   recomputes the sha256 of every inline script and fails the build if it isn't in
-  the CSP, so CI catches a stale hash. Run `npm run check:csp`, copy the
-  `expected token` it prints into the `script-src` list, and re-run. New external
-  scripts under `js/` need no hash (covered by `'self'`); a `<script>` of a non-JS
-  type like `application/ld+json` is data, not executed, and needs none either.
-- `frame-ancestors` can't be set from a `<meta>` CSP (browsers ignore it there);
-  it belongs on the host if added.
+  **both** policies, so CI catches a stale hash. Run `npm run check:csp`, copy the
+  `expected token` it prints into the `script-src` list in **both `index.html` and
+  `.htaccess`**, and re-run. New external scripts under `js/` need no hash (covered
+  by `'self'`); a `<script>` of a non-JS type like `application/ld+json` is data,
+  not executed, and needs none either.
+- The other security headers (`X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`) and long-cache for static images also
+  live in `.htaccess`. None of these apply under the python dev server; verify
+  them after a deploy with `curl -sI https://acurioustale.de/`.
+- `.htaccess` is in the deploy set and ships to the web root; the rsync jail's
+  path prefix already covers it, so no server-side change is needed.
 
 ## Deployment
 
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
-`deploy.sh` (an `rsync -avz --delete` of `index.html`, `robots.txt`,
+`deploy.sh` (an `rsync -avz --delete` of `index.html`, `.htaccess`, `robots.txt`,
 `sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`). CI authenticates with
 the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
 

@@ -1,7 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { nextTheme } from "../js/theme.js";
+import { nextTheme, normalizeMode } from "../js/theme.js";
+
+test("normalizeMode honours the two explicit overrides", () => {
+  assert.equal(normalizeMode("light"), "light");
+  assert.equal(normalizeMode("dark"), "dark");
+});
+
+test("normalizeMode treats anything else as auto", () => {
+  for (const v of [null, undefined, "", "auto", "Light", "DARK", "sepia", 0]) {
+    assert.equal(normalizeMode(v), "auto");
+  }
+});
 
 // Walk the cycle from a starting mode for N clicks, returning the sequence of
 // modes visited (excluding the start). osPrefersLight stays fixed, as it would
