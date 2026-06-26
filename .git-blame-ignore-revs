@@ -1,0 +1,9 @@
+# Commits to skip in `git blame` because they are purely mechanical and would
+# otherwise mask the real authorship of every reformatted line.
+#
+# Enable locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub applies this file automatically.
+
+# style: reformat stylesheet with prettier
+3ae3f5bf94d3af20a564f08e9cb9c03779b1095a
