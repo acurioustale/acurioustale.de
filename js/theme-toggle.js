@@ -1,4 +1,4 @@
-import { nextTheme } from "./theme.js";
+import { nextTheme, normalizeMode } from "./theme.js";
 
 // Inject the theme toggle as progressive enhancement: without JS the OS
 // preference still drives light/dark via CSS, and no dead control shows.
@@ -13,8 +13,7 @@ import { nextTheme } from "./theme.js";
 
   // The current explicit override, or "auto" when none is set.
   function mode() {
-    var attr = root.getAttribute("data-theme");
-    return attr === "light" || attr === "dark" ? attr : "auto";
+    return normalizeMode(root.getAttribute("data-theme"));
   }
 
   // The next theme in the cycle, with the order derived from the OS preference
