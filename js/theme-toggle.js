@@ -49,12 +49,12 @@ import { nextTheme, normalizeMode } from "./theme.js";
     render();
   });
 
-  // Re-render the glyph on OS changes while in auto mode (it follows the OS).
+  // The label's "switch to" target is derived from the OS preference (it sets
+  // the cycle order), so re-render on every OS change in any mode — not just
+  // auto, where the glyph also follows the OS.
   window
     .matchMedia("(prefers-color-scheme: light)")
-    .addEventListener("change", function () {
-      if (mode() === "auto") render();
-    });
+    .addEventListener("change", render);
 
   bar.appendChild(btn);
   render();
