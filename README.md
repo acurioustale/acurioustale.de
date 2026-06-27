@@ -69,7 +69,7 @@ they never gate a deploy) — on pull requests and a weekly schedule via the
 
 ```bash
 brew install lychee
-lychee --config lychee.toml index.html README.md CLAUDE.md
+lychee --config lychee.toml index.html README.md CLAUDE.md SECURITY.md
 ```
 
 ### Regenerating the share image
