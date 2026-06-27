@@ -12,7 +12,7 @@
          frame-ancestors is ignored in a meta CSP and is set at the host. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-zdc3Udp7lG0qD5w3OgDbBM0wt/MsY0bdjNAEz5uOQ0Q='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self' 'sha256-wg/QGEsxaqmIHUtQUGJJwC7J7cInwtC263Q7dKQio4o='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
     />
 
     <title>Markus Spitzner — me@acurioustale.de</title>
@@ -104,7 +104,7 @@
       // Apply a saved theme before first paint to avoid a flash.
       (function () {
         try {
-          var t = localStorage.getItem("theme");
+          const t = localStorage.getItem("theme");
           if (t === "light" || t === "dark") {
             document.documentElement.setAttribute("data-theme", t);
           }
