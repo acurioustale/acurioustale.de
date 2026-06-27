@@ -24,6 +24,7 @@
     "svgo": "^4.0.1"
   },
   "overrides": {
-    "markdown-it": "^14.2.0"
+    "markdown-it": "^14.2.0",
+    "js-yaml": "^4.3.0"
   }
 }
