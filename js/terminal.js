@@ -77,8 +77,17 @@ import { reply, help } from "./commands.js";
     screen.scrollTop = screen.scrollHeight;
   }
   fitScreen();
-  // Recompute on resize: the card reflows, changing the boot height.
-  window.addEventListener("resize", fitScreen);
+  // Recompute on resize: the card reflows, changing the boot height. fitScreen
+  // forces a synchronous layout, so coalesce a burst of resize events into one
+  // measurement per frame instead of running it on every event.
+  var resizeFrame = 0;
+  window.addEventListener("resize", function () {
+    if (resizeFrame) return;
+    resizeFrame = requestAnimationFrame(function () {
+      resizeFrame = 0;
+      fitScreen();
+    });
+  });
 
   // Echo the typed command, reusing the prompt/run styling. textContent
   // only — never innerHTML — so typed input can't inject markup.
