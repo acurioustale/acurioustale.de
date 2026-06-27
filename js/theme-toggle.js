@@ -11,6 +11,10 @@ import { nextTheme, normalizeMode } from "./theme.js";
 
   var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
 
+  // The OS scheme drives both the cycle order and the live label, so query it
+  // once and reuse the same MediaQueryList for reads and the change listener.
+  var prefersLight = window.matchMedia("(prefers-color-scheme: light)");
+
   // The current explicit override, or "auto" when none is set.
   function mode() {
     return normalizeMode(root.getAttribute("data-theme"));
@@ -19,8 +23,7 @@ import { nextTheme, normalizeMode } from "./theme.js";
   // The next theme in the cycle, with the order derived from the OS preference
   // so the unavoidable colour-neutral step lands on the wrap back to auto.
   function next(m) {
-    var osLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-    return nextTheme(m, osLight);
+    return nextTheme(m, prefersLight.matches);
   }
 
   function apply(to) {
@@ -52,9 +55,7 @@ import { nextTheme, normalizeMode } from "./theme.js";
   // The label's "switch to" target is derived from the OS preference (it sets
   // the cycle order), so re-render on every OS change in any mode — not just
   // auto, where the glyph also follows the OS.
-  window
-    .matchMedia("(prefers-color-scheme: light)")
-    .addEventListener("change", render);
+  prefersLight.addEventListener("change", render);
 
   bar.appendChild(btn);
   render();
