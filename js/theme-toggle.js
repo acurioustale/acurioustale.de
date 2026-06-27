@@ -5,15 +5,15 @@ import { nextTheme, normalizeMode } from "./theme.js";
 // The toggle cycles through auto, light and dark; "auto" clears the override
 // and hands control back to the OS preference.
 (function () {
-  var root = document.documentElement;
-  var bar = document.querySelector(".titlebar");
+  const root = document.documentElement;
+  const bar = document.querySelector(".titlebar");
   if (!bar) return;
 
-  var GLYPH = { auto: "◐", light: "☼", dark: "☾" };
+  const GLYPH = { auto: "◐", light: "☼", dark: "☾" };
 
   // The OS scheme drives both the cycle order and the live label, so query it
   // once and reuse the same MediaQueryList for reads and the change listener.
-  var prefersLight = window.matchMedia("(prefers-color-scheme: light)");
+  const prefersLight = window.matchMedia("(prefers-color-scheme: light)");
 
   // The current explicit override, or "auto" when none is set.
   function mode() {
@@ -35,13 +35,13 @@ import { nextTheme, normalizeMode } from "./theme.js";
     else root.setAttribute("data-theme", to);
   }
 
-  var btn = document.createElement("button");
+  const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "theme-toggle";
 
   function render() {
-    var m = mode();
-    var label = "Theme: " + m + " — switch to " + next(m);
+    const m = mode();
+    const label = "Theme: " + m + " — switch to " + next(m);
     btn.textContent = GLYPH[m];
     btn.setAttribute("aria-label", label);
     btn.title = label;

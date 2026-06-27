@@ -7,7 +7,7 @@ import { reply, help } from "./commands.js";
 // terminal), help lists the commands, and ./whoami.sh and ls projects/
 // reprint the whoami card and the projects list.
 (function () {
-  var last = document.querySelector(".prompt-last");
+  const last = document.querySelector(".prompt-last");
   if (!last) return;
 
   // Desktop only: on touch devices the static cursor is left untouched so
@@ -15,12 +15,12 @@ import { reply, help } from "./commands.js";
   if (!window.matchMedia || !window.matchMedia("(pointer: fine)").matches)
     return;
 
-  var screen = last.parentNode;
-  var cursor = last.querySelector(".cursor");
+  const screen = last.parentNode;
+  const cursor = last.querySelector(".cursor");
 
   // Scrollback for echoed commands and their replies. The prompt line
   // stays at the bottom; new output is inserted just above it.
-  var log = document.createElement("div");
+  const log = document.createElement("div");
   log.setAttribute("aria-live", "polite");
   screen.insertBefore(log, last);
 
@@ -29,14 +29,14 @@ import { reply, help } from "./commands.js";
   // clear hides all of it so the screen truly empties; the originals stay in
   // the DOM (just hidden) so echoBlock can still clone them when a command
   // reprints. Everything except the scrollback and the live prompt counts.
-  var boot = [];
-  for (var b = 0; b < screen.children.length; b++) {
+  const boot = [];
+  for (let b = 0; b < screen.children.length; b++) {
     if (screen.children[b] !== log && screen.children[b] !== last) {
       boot.push(screen.children[b]);
     }
   }
 
-  var input = document.createElement("input");
+  const input = document.createElement("input");
   input.type = "text";
   input.className = "cmd-input";
   input.setAttribute("aria-label", "Terminal — type a command");
@@ -58,9 +58,9 @@ import { reply, help } from "./commands.js";
   // card at the current width — never whatever has been typed since, and never
   // the collapsed single line left after clear has hidden the boot output.
   function fitScreen() {
-    var prevLogDisplay = log.style.display;
-    var prevBootDisplay = [];
-    for (var i = 0; i < boot.length; i++) {
+    const prevLogDisplay = log.style.display;
+    const prevBootDisplay = [];
+    for (let i = 0; i < boot.length; i++) {
       prevBootDisplay.push(boot[i].style.display);
       boot[i].style.display = "";
     }
@@ -69,9 +69,9 @@ import { reply, help } from "./commands.js";
     // Round up and add a hair of slack: the content height is often
     // fractional, and freezing to a value even a sub-pixel short trips the
     // scrollbar at some zoom levels and device pixel ratios.
-    var height = Math.ceil(screen.getBoundingClientRect().height) + 2;
+    const height = Math.ceil(screen.getBoundingClientRect().height) + 2;
     log.style.display = prevLogDisplay;
-    for (var j = 0; j < boot.length; j++)
+    for (let j = 0; j < boot.length; j++)
       boot[j].style.display = prevBootDisplay[j];
     screen.style.height = height + "px";
     screen.scrollTop = screen.scrollHeight;
@@ -80,7 +80,7 @@ import { reply, help } from "./commands.js";
   // Recompute on resize: the card reflows, changing the boot height. fitScreen
   // forces a synchronous layout, so coalesce a burst of resize events into one
   // measurement per frame instead of running it on every event.
-  var resizeFrame = 0;
+  let resizeFrame = 0;
   window.addEventListener("resize", function () {
     if (resizeFrame) return;
     resizeFrame = requestAnimationFrame(function () {
@@ -92,12 +92,12 @@ import { reply, help } from "./commands.js";
   // Echo the typed command, reusing the prompt/run styling. textContent
   // only — never innerHTML — so typed input can't inject markup.
   function echoLine(raw) {
-    var echo = document.createElement("p");
+    const echo = document.createElement("p");
     echo.className = "cmd";
-    var p = document.createElement("span");
+    const p = document.createElement("span");
     p.className = "prompt";
     p.textContent = "$";
-    var c = document.createElement("span");
+    const c = document.createElement("span");
     c.className = "run";
     c.textContent = " " + raw;
     echo.appendChild(p);
@@ -108,17 +108,17 @@ import { reply, help } from "./commands.js";
   // Replay a static block (the whoami card or the projects list) as output
   // by cloning the original node, so it stays in sync with the page.
   function echoBlock(selector) {
-    var node = document.querySelector(selector);
+    const node = document.querySelector(selector);
     if (!node) return;
-    var clone = node.cloneNode(true);
+    const clone = node.cloneNode(true);
     // The original is hidden once clear has run; cloneNode copies that inline
     // display:none, so reset it or the reprinted block would be invisible.
     clone.style.display = "";
     // Demote any cloned <h1> so replayed output doesn't add duplicate
     // top-level headings to the document outline.
-    var heading = clone.querySelector("h1");
+    const heading = clone.querySelector("h1");
     if (heading) {
-      var p = document.createElement("p");
+      const p = document.createElement("p");
       p.className = heading.className;
       p.textContent = heading.textContent;
       heading.replaceWith(p);
@@ -127,7 +127,7 @@ import { reply, help } from "./commands.js";
   }
 
   function replyLine(text) {
-    var out = document.createElement("p");
+    const out = document.createElement("p");
     out.className = "reply";
     out.textContent = text;
     log.appendChild(out);
@@ -136,15 +136,15 @@ import { reply, help } from "./commands.js";
   // The help listing is a preformatted block so its aligned columns and line
   // breaks survive (a <p> would collapse them onto one line).
   function helpBlock() {
-    var out = document.createElement("pre");
+    const out = document.createElement("pre");
     out.className = "help";
     out.textContent = help();
     log.appendChild(out);
   }
 
   function run() {
-    var raw = input.value;
-    var cmd = raw.trim();
+    const raw = input.value;
+    const cmd = raw.trim();
     if (!cmd) return;
 
     // clear empties the screen: wipe the scrollback and hide the boot output,
@@ -152,7 +152,7 @@ import { reply, help } from "./commands.js";
     // reprints the relevant block.
     if (cmd === "clear") {
       log.textContent = "";
-      for (var k = 0; k < boot.length; k++) boot[k].style.display = "none";
+      for (let k = 0; k < boot.length; k++) boot[k].style.display = "none";
       input.value = "";
       size();
       return;
@@ -196,7 +196,7 @@ import { reply, help } from "./commands.js";
   // never steal focus from a real control: a button activates on Space's
   // keyup, so grabbing focus on keydown would swallow the theme toggle.
   document.addEventListener("keydown", function (e) {
-    var ae = document.activeElement;
+    const ae = document.activeElement;
     if (ae && ae !== document.body) return;
     if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
     input.focus({ preventScroll: true });
