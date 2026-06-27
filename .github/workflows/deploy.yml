@@ -11,6 +11,12 @@ on:
         type: boolean
         default: false
 
+# Least privilege: neither job needs to write to the repo. validate only reads
+# the checkout to lint and test; deploy authenticates to the host over SSH, not
+# with the GITHUB_TOKEN. Setting contents: read drops every other default scope.
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
