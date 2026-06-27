@@ -44,7 +44,9 @@ for (const { name, csp } of policies) {
 if (failed) process.exit(1);
 
 // Every <script> element in index.html, capturing opening-tag attributes + body.
-const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+const scripts = [
+  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script(?:\s[^>]*)?>/gi),
+];
 
 for (const [, attrs, body] of scripts) {
   if (/\bsrc=/i.test(attrs)) continue; // external: covered by script-src 'self'
