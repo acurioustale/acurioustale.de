@@ -22,7 +22,7 @@ const html = readFileSync(
 // The guard is the one inline <script> (no src) that reads localStorage; the
 // other inline block is JSON-LD data, which never touches it.
 const inlineGuards = [
-  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
+  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script(?:\s[^>]*)?>/gi),
 ].filter(
   ([, attrs, body]) => !/\bsrc=/i.test(attrs) && /localStorage/.test(body),
 );
