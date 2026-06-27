@@ -40,12 +40,14 @@ Prettier, shfmt and actionlint versions pinned in `deploy.yml` in sync with
 caught before push). `.claude/launch.json` defines a "site" launch config that
 serves on port 4174.
 
-`npm audit` reports two moderate advisories for `js-yaml 4.1.1`, pulled in by
-`markdownlint-cli2`. They are accepted, not fixable here: the only patched line
-is `js-yaml@5`, which drops the default export `markdownlint-cli2` imports and so
-breaks it. The advisory is a quadratic-complexity DoS, and this is dev-only
-tooling that lints our own files, so there is no untrusted input. The
-`markdown-it` advisory was fixable and is pinned via `overrides`.
+Two transitive dev dependencies of `markdownlint-cli2` carried advisories and are
+pinned to patched versions through `overrides` in `package.json`: `markdown-it`
+(`^14.2.0`) and `js-yaml` (`^4.3.0`). The js-yaml pin deliberately stays on the
+4.x line: the fix for its quadratic-complexity DoS in merge-key handling was
+backported to 4.2.0, while the 5.x line drops the default export
+`markdownlint-cli2` imports and so would break it. Both are dev-only tooling that
+lints our own files, so there is no untrusted input regardless, and `npm audit`
+is clean.
 
 ## Theme system (the one piece of real logic)
 
