@@ -135,7 +135,11 @@ editing:
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
 `deploy.sh` (an `rsync -avz --delete` of `index.html`, `.htaccess`, `robots.txt`,
 `sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`). CI authenticates with
-the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets.
+the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets. The workflow sets
+least-privilege token scopes at the top level (`permissions: contents: read`) —
+neither the `validate` nor the `deploy` job writes to the repo (deploy
+authenticates over SSH, not the `GITHUB_TOKEN`), so keep that block if you edit
+the workflow.
 
 The `TARGET` in `deploy.sh` **must keep its trailing slash** (`html/acurioustale.de/`).
 The deploy key is jailed server-side to a forced `rsync` command that matches that

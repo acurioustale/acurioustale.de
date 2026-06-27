@@ -31,6 +31,7 @@ help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested i
 ├── humans.txt          ← the people behind the site (linked via rel="author")
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
 ├── lychee.toml         ← link-checker config (used by the links workflow)
+├── SECURITY.md         ← security policy: how to report a vulnerability
 ├── package.json        ← npm-only lint tools (ESLint, stylelint, markdownlint, svgo)
 ├── .github/workflows/  ← deploy (gating checks) + links (lychee) CI
 ├── validate.sh         ← run all gating CI checks locally
@@ -97,6 +98,9 @@ Markdown (ESLint, stylelint, markdownlint-cli2), runs the unit tests
 (`node --test`), and checks the CSP hash and og-image dimensions. Only if
 everything passes does it run `deploy.sh`. The workflow runs on every push to `main` (and can be triggered
 manually from the Actions tab); pull requests run the same gate without deploying.
+Both jobs run with least-privilege `GITHUB_TOKEN` scopes (`permissions:
+contents: read`): neither writes to the repo, and the deploy authenticates to
+the host over SSH rather than the token.
 Link checking runs separately (see Development) so flaky external hosts never
 block a deploy.
 
@@ -144,6 +148,13 @@ which a meta tag can't express. The meta stays as the locally-testable baseline
 asserts the inline-script hash matches in both — so editing that script fails the
 build until both are updated. Verify the live headers after a deploy with
 `curl -sI https://acurioustale.de/ | grep -i 'content-security\|x-frame'`.
+
+## Security
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md) — please disclose
+privately rather than opening a public issue. The production response headers
+and Content-Security-Policy themselves are described under
+[Security headers](#security-headers) above.
 
 ## License
 
