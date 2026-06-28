@@ -99,11 +99,13 @@ Everything else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the
 toggle UI) and `terminal.js` (the interactive guest-shell easter egg, desktop
 only, unrelated to theming). The card is dressed as a macOS Terminal session and
 the prompt accepts commands: `./whoami.sh` and `ls projects/` reprint the boot
-blocks, `clear` empties the screen (hiding the boot output, like a real terminal),
-`help` lists the working commands, and everything else is denied with a fitting
-shell error. The pure logic each depends on is factored out for testing —
-`theme.js` (`nextTheme()`) and `commands.js` (`reply()` for the denials, `help()`
-for the listing) — and exercised by `test/`. The DOM glue in the two UI modules is thin
+blocks, `ls` lists the directory, `uptime`/`date`/`echo` behave like their shell
+namesakes, `sudo` returns the classic lecture, `clear` empties the screen (hiding
+the boot output, like a real terminal), `help` lists the working commands, and
+everything else is denied with a fitting shell error. The pure logic each depends
+on is factored out for testing — `theme.js` (`nextTheme()`) and `commands.js`
+(`reply()` for the command replies and denials, `help()` for the listing) — and
+exercised by `test/`. The DOM glue in the two UI modules is thin
 and verified in the browser, not unit-tested.
 
 The page sends a strict Content-Security-Policy **twice**: a `<meta http-equiv>`
@@ -134,7 +136,12 @@ editing:
 
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
 `deploy.sh` (an `rsync -avz --delete` of `index.html`, `.htaccess`, `robots.txt`,
-`sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`). CI authenticates with
+`sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`). Before the rsync,
+`deploy.sh` shells out to `node` to stamp the current time into `LAST_DEPLOY` in
+`js/commands.js` (so the terminal's `uptime` counts from the live deploy), backs
+the file up outside the repo and restores it on exit, so the edit ships to the
+host but never lands in git; the `deploy` job therefore sets up Node too. CI
+authenticates with
 the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets. The workflow sets
 least-privilege token scopes at the top level (`permissions: contents: read`) —
 neither the `validate` nor the `deploy` job writes to the repo (deploy

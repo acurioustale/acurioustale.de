@@ -155,5 +155,13 @@ jobs:
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
+      # deploy.sh shells out to `node` to stamp the deploy timestamp into
+      # js/commands.js, so this job needs Node on the runner like validate does.
+      # No npm cache: the script only uses node's stdlib, with no install step.
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
       - name: Deploy
         run: ./deploy.sh ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
