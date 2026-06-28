@@ -98,9 +98,6 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     const node = document.querySelector(selector);
     if (!node) return;
     const clone = node.cloneNode(true);
-    // The original is hidden once clear has run; cloneNode copies that inline
-    // display:none, so reset it or the reprinted block would be invisible.
-    clone.style.display = "";
     // Demote any cloned <h1> so replayed output doesn't add duplicate
     // top-level headings to the document outline.
     const heading = clone.querySelector("h1");
