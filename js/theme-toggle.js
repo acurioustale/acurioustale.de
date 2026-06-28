@@ -7,7 +7,6 @@ import { nextTheme, normalizeMode } from "./theme.js";
 const root = document.documentElement;
 const bar = document.querySelector(".titlebar");
 if (bar) {
-
   const GLYPH = { auto: "◐", light: "☼", dark: "☾" };
 
   // The OS scheme drives both the cycle order and the live label, so query it

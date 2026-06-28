@@ -10,12 +10,7 @@ const last = document.querySelector(".prompt-last");
 
 // Desktop only: on touch devices the static cursor is left untouched so
 // a stray tap never pops up the on-screen keyboard.
-if (
-  last &&
-  window.matchMedia &&
-  window.matchMedia("(pointer: fine)").matches
-) {
-
+if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   const screen = last.parentNode;
   const cursor = last.querySelector(".cursor");
 
