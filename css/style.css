@@ -288,10 +288,13 @@ a:focus-visible {
   outline: none;
 }
 
-/* Denied-command output. Echoed commands reuse .cmd/.prompt/.run above. */
+/* Command reply output, both real replies and denials. pre-wrap preserves the
+   newlines and indentation of multi-line replies like the sudo lecture; echoed
+   commands reuse .cmd/.prompt/.run above. */
 .reply {
   margin: 0;
   color: var(--muted);
+  white-space: pre-wrap;
 }
 
 /* The `help` listing: a preformatted block that keeps its aligned columns,

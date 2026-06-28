@@ -6,20 +6,42 @@ import { fileURLToPath } from "node:url";
 import { reply, help } from "../js/commands.js";
 
 test("privileged commands are denied with permission denied", () => {
-  for (const cmd of ["sudo", "su", "doas", "chmod", "chown"]) {
+  for (const cmd of ["su", "doas", "chmod", "chown"]) {
     assert.equal(reply(cmd), cmd + ": permission denied");
     // The denial names the bare command, ignoring any arguments.
     assert.equal(reply(cmd + " -R /"), cmd + ": permission denied");
   }
 });
 
-test("a bare ls is locked down", () => {
-  assert.equal(reply("ls"), "ls: .: Permission denied");
+test("sudo returns the classic lecture and incident report", () => {
+  const res = reply("sudo su");
+  assert.match(res, /We trust you have received the usual lecture/);
+  assert.match(
+    res,
+    /guest is not in the sudoers file\. {2}This incident will be reported\./,
+  );
+});
+
+test("a bare ls lists projects/ and whoami.sh", () => {
+  assert.equal(reply("ls"), "projects/ whoami.sh");
 });
 
 test("ls of any other path errors like real ls", () => {
   assert.equal(reply("ls foo"), "ls: foo: No such file or directory");
   assert.equal(reply("ls a b"), "ls: a b: No such file or directory");
+});
+
+test("uptime returns calculated uptime string", () => {
+  assert.match(reply("uptime"), /^up \d/);
+});
+
+test("date returns a date string", () => {
+  assert.ok(reply("date").length > 10);
+});
+
+test("echo echoes back arguments", () => {
+  assert.equal(reply("echo hello world"), "hello world");
+  assert.equal(reply("echo"), "");
 });
 
 test("a path-like command reports no such file, naming the last token", () => {
@@ -40,7 +62,17 @@ test("anything else is command not found", () => {
 test("help lists each working command", () => {
   const text = help();
   assert.match(text, /^available commands:/);
-  for (const cmd of ["./whoami.sh", "ls projects/", "clear", "help"]) {
+  for (const cmd of [
+    "./whoami.sh",
+    "ls projects/",
+    "ls",
+    "uptime",
+    "date",
+    "sudo",
+    "echo",
+    "clear",
+    "help",
+  ]) {
     assert.ok(text.includes(cmd), `help should mention ${cmd}`);
   }
 });
@@ -63,10 +95,17 @@ const terminalSource = readFileSync(
   "utf8",
 );
 
-// Commands terminal.js dispatches on: every `cmd === "..."` literal.
-const dispatched = new Set(
-  [...terminalSource.matchAll(/cmd === "([^"]+)"/g)].map((m) => m[1]),
+const commandsSource = readFileSync(
+  fileURLToPath(new URL("../js/commands.js", import.meta.url)),
+  "utf8",
 );
+
+// Commands terminal.js dispatches on: every `cmd === "..."` literal.
+// Plus commands commands.js handles directly: every `argv[0] === "..."` literal.
+const dispatched = new Set([
+  ...[...terminalSource.matchAll(/cmd === "([^"]+)"/g)].map((m) => m[1]),
+  ...[...commandsSource.matchAll(/argv\[0\] === "([^"]+)"/g)].map((m) => m[1]),
+]);
 
 // Commands help() advertises: the first column of each listing line (the
 // command, separated from its description by two or more spaces).
