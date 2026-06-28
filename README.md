@@ -11,10 +11,11 @@ JavaScript the OS `prefers-color-scheme` still drives the colours via CSS and no
 dead control is shown; the chosen theme is persisted in `localStorage`. The other
 dresses the card as a macOS Terminal session and turns the prompt into an
 interactive guest-shell easter egg (desktop only): a handful of commands work —
-`./whoami.sh` and `ls projects/` reprint the boot output, `ls`, `uptime`, `date`
-and `echo` behave like their shell namesakes, `sudo` earns the classic lecture,
-`clear` empties the screen and `help` lists them — and everything else is denied
-with a fitting shell error. The pure logic behind both (the theme cycle, and the command replies and
+`ls` reveals `projects/` and `whoami.sh` to discover and run (`./whoami.sh` and
+`ls projects/` reprint the boot output), `uptime`, `date` and `echo` behave like
+their shell namesakes, `sudo` earns the classic lecture, `clear` empties the
+screen and `help` lists the commands — and everything else is denied with a
+fitting shell error. The pure logic behind both (the theme cycle, and the command replies and
 help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested in
 `test/`.
 
