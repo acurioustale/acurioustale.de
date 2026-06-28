@@ -50,7 +50,7 @@ export function reply(cmd) {
   // An array, not an object-as-set: a plain object would match inherited
   // Object.prototype members (toString, constructor, …) as commands.
   const PRIV = ["su", "doas", "chmod", "chown"];
-  if (PRIV.indexOf(argv[0]) !== -1) return argv[0] + ": permission denied";
+  if (PRIV.includes(argv[0])) return argv[0] + ": permission denied";
   if (argv[0] === "sudo") {
     return [
       "We trust you have received the usual lecture from the local System",
@@ -76,7 +76,7 @@ export function reply(cmd) {
   if (argv[0] === "echo") {
     return argv.slice(1).join(" ");
   }
-  if (cmd.indexOf("/") !== -1) {
+  if (cmd.includes("/")) {
     return "bash: " + argv[argv.length - 1] + ": No such file or directory";
   }
   return "bash: " + argv[0] + ": command not found";

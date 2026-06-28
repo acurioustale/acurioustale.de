@@ -31,9 +31,9 @@ if (
   // the DOM (just hidden) so echoBlock can still clone them when a command
   // reprints. Everything except the scrollback and the live prompt counts.
   const boot = [];
-  for (let b = 0; b < screen.children.length; b++) {
-    if (screen.children[b] !== log && screen.children[b] !== last) {
-      boot.push(screen.children[b]);
+  for (const child of screen.children) {
+    if (child !== log && child !== last) {
+      boot.push(child);
     }
   }
 
@@ -61,9 +61,9 @@ if (
   function fitScreen() {
     const prevLogDisplay = log.style.display;
     const prevBootDisplay = [];
-    for (let i = 0; i < boot.length; i++) {
-      prevBootDisplay.push(boot[i].style.display);
-      boot[i].style.display = "";
+    for (const el of boot) {
+      prevBootDisplay.push(el.style.display);
+      el.style.display = "";
     }
     log.style.display = "none";
     screen.style.height = "auto";
@@ -153,7 +153,7 @@ if (
     // reprints the relevant block.
     if (cmd === "clear") {
       log.textContent = "";
-      for (let k = 0; k < boot.length; k++) boot[k].style.display = "none";
+      for (const el of boot) el.style.display = "none";
       input.value = "";
       size();
       return;
