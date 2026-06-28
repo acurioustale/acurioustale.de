@@ -6,14 +6,15 @@ import { reply, help } from "./commands.js";
 // work: clear wipes the whole screen (the boot card included, like a real
 // terminal), help lists the commands, and ./whoami.sh and ls projects/
 // reprint the whoami card and the projects list.
-(function () {
-  const last = document.querySelector(".prompt-last");
-  if (!last) return;
+const last = document.querySelector(".prompt-last");
 
-  // Desktop only: on touch devices the static cursor is left untouched so
-  // a stray tap never pops up the on-screen keyboard.
-  if (!window.matchMedia || !window.matchMedia("(pointer: fine)").matches)
-    return;
+// Desktop only: on touch devices the static cursor is left untouched so
+// a stray tap never pops up the on-screen keyboard.
+if (
+  last &&
+  window.matchMedia &&
+  window.matchMedia("(pointer: fine)").matches
+) {
 
   const screen = last.parentNode;
   const cursor = last.querySelector(".cursor");
@@ -204,4 +205,4 @@ import { reply, help } from "./commands.js";
 
   // Focus on load so typing works right away.
   input.focus({ preventScroll: true });
-})();
+}
