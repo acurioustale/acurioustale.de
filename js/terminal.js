@@ -29,13 +29,8 @@ if (
   // list and their command lines — is static markup above the scrollback.
   // clear hides all of it so the screen truly empties; the originals stay in
   // the DOM (just hidden) so echoBlock can still clone them when a command
-  // reprints. Everything except the scrollback and the live prompt counts.
-  const boot = [];
-  for (const child of screen.children) {
-    if (child !== log && child !== last) {
-      boot.push(child);
-    }
-  }
+  // reprints.
+  const boot = document.querySelector(".boot-container");
 
   const input = document.createElement("input");
   input.type = "text";
@@ -60,11 +55,8 @@ if (
   // the collapsed single line left after clear has hidden the boot output.
   function fitScreen() {
     const prevLogDisplay = log.style.display;
-    const prevBootDisplay = [];
-    for (const el of boot) {
-      prevBootDisplay.push(el.style.display);
-      el.style.display = "";
-    }
+    const prevBootDisplay = boot.style.display;
+    boot.style.display = "";
     log.style.display = "none";
     screen.style.height = "auto";
     // Round up and add a hair of slack: the content height is often
@@ -72,8 +64,7 @@ if (
     // scrollbar at some zoom levels and device pixel ratios.
     const height = Math.ceil(screen.getBoundingClientRect().height) + 2;
     log.style.display = prevLogDisplay;
-    for (let j = 0; j < boot.length; j++)
-      boot[j].style.display = prevBootDisplay[j];
+    boot.style.display = prevBootDisplay;
     screen.style.height = height + "px";
     screen.scrollTop = screen.scrollHeight;
   }
@@ -153,7 +144,7 @@ if (
     // reprints the relevant block.
     if (cmd === "clear") {
       log.textContent = "";
-      for (const el of boot) el.style.display = "none";
+      boot.style.display = "none";
       input.value = "";
       size();
       return;
