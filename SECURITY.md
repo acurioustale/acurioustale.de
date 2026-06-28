@@ -31,4 +31,4 @@ Out of scope:
 There is no bug-bounty programme; this is a personal project and any report is
 appreciated on a good-faith basis.
 
-[advisory]: https://github.com/acurioustale/acurioustale.de/security/advisories/new
+[advisory]: https://github.com/acurioustale/acurioustale/security/advisories/new
