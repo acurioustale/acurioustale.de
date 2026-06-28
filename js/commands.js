@@ -3,14 +3,14 @@
 
 export const LAST_DEPLOY = 1782509511000;
 
-// The commands that actually do something, printed by `help` so the prompt is
-// discoverable — without it, a cleared screen gives no hint of what to type.
-// Kept here next to reply() so a test can assert it lists every working command.
+// The commands `help` advertises, so the prompt stays discoverable — without it
+// a cleared screen gives no hint of what to type. The filesystem entries
+// (whoami.sh and projects/) are deliberately left out: you find them by running
+// `ls` and invoke them as in a real shell. Kept next to reply() so a test can
+// bind this listing to what terminal.js actually dispatches.
 export function help() {
   return [
     "available commands:",
-    "  ./whoami.sh    print the whoami card",
-    "  ls projects/   list projects",
     "  ls             list directory contents",
     "  uptime         show how long the site has been running",
     "  date           print the current date and time",

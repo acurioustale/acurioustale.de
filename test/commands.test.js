@@ -59,22 +59,20 @@ test("anything else is command not found", () => {
 
 // help() must list every command that terminal.js actually handles, so the
 // listing can't drift out of sync with what the prompt accepts.
-test("help lists each working command", () => {
+test("help lists each advertised command", () => {
   const text = help();
   assert.match(text, /^available commands:/);
-  for (const cmd of [
-    "./whoami.sh",
-    "ls projects/",
-    "ls",
-    "uptime",
-    "date",
-    "sudo",
-    "echo",
-    "clear",
-    "help",
-  ]) {
+  for (const cmd of ["ls", "uptime", "date", "sudo", "echo", "clear", "help"]) {
     assert.ok(text.includes(cmd), `help should mention ${cmd}`);
   }
+});
+
+// whoami.sh and projects/ are filesystem entries discovered via `ls` and run
+// directly, not advertised commands, so help() must not list them.
+test("help does not advertise the discoverable filesystem entries", () => {
+  const text = help();
+  assert.ok(!text.includes("whoami.sh"), "help should not list whoami.sh");
+  assert.ok(!text.includes("projects/"), "help should not list projects/");
 });
 
 // Regression guard for the array-not-object choice in reply(): inherited
@@ -85,9 +83,9 @@ test("Object.prototype member names are command not found, not privileged", () =
   }
 });
 
-// The test above proves help() advertises the four commands; the two below bind
-// that listing to terminal.js's actual dispatch, so adding, renaming or dropping
-// a command on one side without the other fails CI. terminal.js's DOM glue isn't
+// The tests above prove help() advertises each command; the two below bind that
+// listing to terminal.js's actual dispatch, so adding, renaming or dropping a
+// command on one side without the other fails CI. terminal.js's DOM glue isn't
 // unit-tested, but its command set is plain string comparisons we read from the
 // source.
 const terminalSource = readFileSync(
@@ -115,9 +113,10 @@ const advertised = help()
   .map((line) => line.trim().split(/\s{2,}/)[0])
   .filter(Boolean);
 
-// Lenient aliases terminal.js accepts but help() intentionally omits (e.g.
-// `ls projects` without the trailing slash mirrors the documented form).
-const ALIASES = new Set(["ls projects"]);
+// Commands terminal.js accepts but help() intentionally omits: the filesystem
+// entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects/`),
+// and the trailing-slash-less `ls projects` alias.
+const ALIASES = new Set(["ls projects", "ls projects/", "./whoami.sh"]);
 
 test("every command help() lists is actually dispatched by terminal.js", () => {
   for (const cmd of advertised) {

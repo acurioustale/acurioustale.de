@@ -98,11 +98,13 @@ the page background.
 Everything else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the
 toggle UI) and `terminal.js` (the interactive guest-shell easter egg, desktop
 only, unrelated to theming). The card is dressed as a macOS Terminal session and
-the prompt accepts commands: `./whoami.sh` and `ls projects/` reprint the boot
-blocks, `ls` lists the directory, `uptime`/`date`/`echo` behave like their shell
-namesakes, `sudo` returns the classic lecture, `clear` empties the screen (hiding
-the boot output, like a real terminal), `help` lists the working commands, and
-everything else is denied with a fitting shell error. The pure logic each depends
+the prompt accepts commands: `ls` lists the directory (`projects/` and
+`whoami.sh`), which you then run as in a real shell — `./whoami.sh` and
+`ls projects/` reprint the boot blocks; `uptime`/`date`/`echo` behave like their
+shell namesakes, `sudo` returns the classic lecture, `clear` empties the screen
+(hiding the boot output, like a real terminal), and `help` lists the commands
+(the filesystem entries are discovered via `ls`, not advertised). Everything else
+is denied with a fitting shell error. The pure logic each depends
 on is factored out for testing — `theme.js` (`nextTheme()`) and `commands.js`
 (`reply()` for the command replies and denials, `help()` for the listing) — and
 exercised by `test/`. The DOM glue in the two UI modules is thin
