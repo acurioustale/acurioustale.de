@@ -6,15 +6,11 @@ import { reply, help } from "./commands.js";
 // work: clear wipes the whole screen (the boot card included, like a real
 // terminal), help lists the commands, and ./whoami.sh and ls projects/
 // reprint the whoami card and the projects list.
-(function () {
-  const last = document.querySelector(".prompt-last");
-  if (!last) return;
+const last = document.querySelector(".prompt-last");
 
-  // Desktop only: on touch devices the static cursor is left untouched so
-  // a stray tap never pops up the on-screen keyboard.
-  if (!window.matchMedia || !window.matchMedia("(pointer: fine)").matches)
-    return;
-
+// Desktop only: on touch devices the static cursor is left untouched so
+// a stray tap never pops up the on-screen keyboard.
+if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   const screen = last.parentNode;
   const cursor = last.querySelector(".cursor");
 
@@ -28,13 +24,8 @@ import { reply, help } from "./commands.js";
   // list and their command lines — is static markup above the scrollback.
   // clear hides all of it so the screen truly empties; the originals stay in
   // the DOM (just hidden) so echoBlock can still clone them when a command
-  // reprints. Everything except the scrollback and the live prompt counts.
-  const boot = [];
-  for (let b = 0; b < screen.children.length; b++) {
-    if (screen.children[b] !== log && screen.children[b] !== last) {
-      boot.push(screen.children[b]);
-    }
-  }
+  // reprints.
+  const boot = document.querySelector(".boot-container");
 
   const input = document.createElement("input");
   input.type = "text";
@@ -59,11 +50,8 @@ import { reply, help } from "./commands.js";
   // the collapsed single line left after clear has hidden the boot output.
   function fitScreen() {
     const prevLogDisplay = log.style.display;
-    const prevBootDisplay = [];
-    for (let i = 0; i < boot.length; i++) {
-      prevBootDisplay.push(boot[i].style.display);
-      boot[i].style.display = "";
-    }
+    const prevBootDisplay = boot.style.display;
+    boot.style.display = "";
     log.style.display = "none";
     screen.style.height = "auto";
     // Round up and add a hair of slack: the content height is often
@@ -71,8 +59,7 @@ import { reply, help } from "./commands.js";
     // scrollbar at some zoom levels and device pixel ratios.
     const height = Math.ceil(screen.getBoundingClientRect().height) + 2;
     log.style.display = prevLogDisplay;
-    for (let j = 0; j < boot.length; j++)
-      boot[j].style.display = prevBootDisplay[j];
+    boot.style.display = prevBootDisplay;
     screen.style.height = height + "px";
     screen.scrollTop = screen.scrollHeight;
   }
@@ -152,7 +139,7 @@ import { reply, help } from "./commands.js";
     // reprints the relevant block.
     if (cmd === "clear") {
       log.textContent = "";
-      for (let k = 0; k < boot.length; k++) boot[k].style.display = "none";
+      boot.style.display = "none";
       input.value = "";
       size();
       return;
@@ -204,4 +191,4 @@ import { reply, help } from "./commands.js";
 
   // Focus on load so typing works right away.
   input.focus({ preventScroll: true });
-})();
+}

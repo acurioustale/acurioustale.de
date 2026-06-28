@@ -4,11 +4,9 @@ import { nextTheme, normalizeMode } from "./theme.js";
 // preference still drives light/dark via CSS, and no dead control shows.
 // The toggle cycles through auto, light and dark; "auto" clears the override
 // and hands control back to the OS preference.
-(function () {
-  const root = document.documentElement;
-  const bar = document.querySelector(".titlebar");
-  if (!bar) return;
-
+const root = document.documentElement;
+const bar = document.querySelector(".titlebar");
+if (bar) {
   const GLYPH = { auto: "◐", light: "☼", dark: "☾" };
 
   // The OS scheme drives both the cycle order and the live label, so query it
@@ -59,4 +57,4 @@ import { nextTheme, normalizeMode } from "./theme.js";
 
   bar.appendChild(btn);
   render();
-})();
+}
