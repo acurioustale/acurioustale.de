@@ -46,7 +46,8 @@ function formatUptime(ms) {
 // like ls, anything else that looks like a path → no such file, otherwise
 // command not found.
 export function reply(cmd) {
-  const argv = cmd.split(/\s+/);
+  const cleanCmd = cmd.trim();
+  const argv = cleanCmd.split(/\s+/);
   // An array, not an object-as-set: a plain object would match inherited
   // Object.prototype members (toString, constructor, …) as commands.
   const PRIV = ["su", "doas", "chmod", "chown"];
@@ -76,7 +77,7 @@ export function reply(cmd) {
   if (argv[0] === "echo") {
     return argv.slice(1).join(" ");
   }
-  if (cmd.includes("/")) {
+  if (cleanCmd.includes("/")) {
     return "bash: " + argv[argv.length - 1] + ": No such file or directory";
   }
   return "bash: " + argv[0] + ": command not found";
