@@ -1,11 +1,18 @@
 # Configuration for the lychee link checker (used by .github/workflows/links.yml).
 # mailto: links are not checked by default (include_mail defaults to false).
 
+# Cache results and retry transient failures so a flaky network or a momentary
+# rate-limit doesn't produce a false "broken link".
+cache = true
+max_cache_age = "1d"
+max_retries = 3
+retry_wait_time = 2
+
+# 2xx is success; a 429 (rate-limited) response still proves the link exists.
+accept = ["200..=299", "429"]
+
 # Hosts that answer automated requests with false failures — the links are
 # valid, we just can't verify them from a bot (LinkedIn replies with HTTP 999).
 exclude = ["linkedin\\.com"]
-
-# Tolerate transient network blips before reporting a link as broken.
-max_retries = 3
 
 no_progress = true
