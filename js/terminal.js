@@ -190,6 +190,11 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       replyLine(reply(rawCmd));
     }
 
+    // Cap scrollback growth so long sessions don't bloat the DOM.
+    while (log.children.length > 100) {
+      log.removeChild(log.firstElementChild);
+    }
+
     input.value = "";
     size();
     // Keep the prompt in view as history scrolls up.
