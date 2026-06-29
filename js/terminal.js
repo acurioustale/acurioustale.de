@@ -158,10 +158,18 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     "ls projects": ".projects",
   });
 
+  const history = [];
+  let historyIndex = 0;
+
   function run() {
     const raw = input.value;
     const rawCmd = raw.trim();
     if (!rawCmd) return;
+
+    if (history[history.length - 1] !== raw) {
+      history.push(raw);
+    }
+    historyIndex = history.length;
 
     // Normalize internal consecutive whitespace to a single space for matching.
     const cmd = rawCmd.replace(/\s+/g, " ");
@@ -205,6 +213,24 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     if (e.key === "Enter") {
       e.preventDefault();
       run();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (historyIndex > 0) {
+        historyIndex--;
+        input.value = history[historyIndex];
+        size();
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        input.value = history[historyIndex];
+        size();
+      } else if (historyIndex === history.length - 1) {
+        historyIndex++;
+        input.value = "";
+        size();
+      }
     }
   });
 
