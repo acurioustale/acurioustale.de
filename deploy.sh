@@ -18,9 +18,13 @@ echo "==> Updating deploy timestamp in js/commands.js"
 node -e '
 	const fs = require("fs");
 	const file = "js/commands.js";
-	let content = fs.readFileSync(file, "utf8");
-	content = content.replace(/export const LAST_DEPLOY = \d+;/, "export const LAST_DEPLOY = " + Date.now() + ";");
-	fs.writeFileSync(file, content);
+	const before = fs.readFileSync(file, "utf8");
+	const after = before.replace(/export const LAST_DEPLOY = \d+;/, "export const LAST_DEPLOY = " + Date.now() + ";");
+	if (after === before) {
+		console.error("deploy: could not find a LAST_DEPLOY assignment to stamp in " + file);
+		process.exit(1);
+	}
+	fs.writeFileSync(file, after);
 '
 
 REMOTE="web4186@http2.core-networks.de"
