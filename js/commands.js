@@ -77,7 +77,10 @@ export function reply(cmd) {
     return argv.slice(1).join(" ");
   }
   if (cleanCmd.includes("/")) {
-    return "bash: " + argv[argv.length - 1] + ": No such file or directory";
+    // Name the path-like argument that triggered this branch — the first token
+    // containing a slash — not just the last token, which may be a plain word.
+    const pathArg = argv.find((a) => a.includes("/")) || argv[argv.length - 1];
+    return "bash: " + pathArg + ": No such file or directory";
   }
   return "bash: " + argv[0] + ": command not found";
 }
