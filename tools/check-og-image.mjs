@@ -6,17 +6,20 @@
 //
 // This does NOT catch content drift (editing og-image.src.svg without
 // re-rendering the PNG) — that stays a manual step, see the README.
-import { readFile } from "node:fs/promises";
+import { open } from "node:fs/promises";
 
 const EXPECTED = { width: 1200, height: 630 };
 const path = new URL("../assets/og-image.png", import.meta.url);
 
-const buf = await readFile(path);
+const file = await open(path, "r");
+const buf = Buffer.alloc(24);
+const { bytesRead } = await file.read(buf, 0, 24, 0);
+await file.close();
 
 // PNG: 8-byte signature, then the IHDR chunk (length+type) with width and
 // height as big-endian uint32 at byte offsets 16 and 20.
 const SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-if (buf.length < 24 || !buf.subarray(0, 8).equals(SIGNATURE)) {
+if (bytesRead < 24 || !buf.subarray(0, 8).equals(SIGNATURE)) {
   console.error("check-og-image: assets/og-image.png is not a valid PNG");
   process.exit(1);
 }
