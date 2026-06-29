@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
 import { normalizeMode } from "../js/theme.js";
+import { inlineScripts } from "../tools/inline-scripts.mjs";
 
 // The pre-paint theme guard in index.html runs before any module can load, so it
 // can't import normalizeMode() and instead hand-duplicates its accept/reject rule
@@ -21,17 +22,15 @@ const html = readFileSync(
 
 // The guard is the one inline <script> (no src) that reads localStorage; the
 // other inline block is JSON-LD data, which never touches it.
-const inlineGuards = [
-  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script(?:\s[^>]*)?>/gi),
-].filter(
-  ([, attrs, body]) => !/\bsrc=/i.test(attrs) && /localStorage/.test(body),
+const inlineGuards = inlineScripts(html).filter(({ body }) =>
+  /localStorage/.test(body),
 );
 
 test("index.html has exactly one inline localStorage theme guard", () => {
   assert.equal(inlineGuards.length, 1);
 });
 
-const guardSource = inlineGuards[0][2];
+const guardSource = inlineGuards[0].body;
 
 // Execute the extracted guard with a fake localStorage holding `stored` and a
 // fake document that records any data-theme it sets. Returns the applied
