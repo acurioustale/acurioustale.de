@@ -33,6 +33,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   const input = document.createElement("input");
   input.type = "text";
   input.className = "cmd-input";
+  input.maxLength = 1000;
   input.setAttribute("aria-label", "Terminal — type a command");
   input.autocomplete = "off";
   input.autocapitalize = "off";
