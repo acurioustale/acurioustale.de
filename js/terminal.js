@@ -26,6 +26,7 @@ if (
   // stays at the bottom; new output is inserted just above it.
   const log = document.createElement("div");
   log.setAttribute("aria-live", "polite");
+  log.setAttribute("aria-atomic", "false");
   screen.insertBefore(log, last);
 
   // The page's boot output — the login line, the whoami card, the projects
