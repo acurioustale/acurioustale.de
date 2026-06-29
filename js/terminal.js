@@ -72,17 +72,34 @@ if (
     screen.scrollTop = screen.scrollHeight;
   }
   fitScreen();
-  // Recompute on resize: the card reflows, changing the boot height. fitScreen
-  // forces a synchronous layout, so coalesce a burst of resize events into one
-  // measurement per frame instead of running it on every event.
-  let resizeFrame = 0;
-  window.addEventListener("resize", function () {
-    if (resizeFrame) return;
-    resizeFrame = requestAnimationFrame(function () {
-      resizeFrame = 0;
-      fitScreen();
+  // Recompute only when the terminal's actual width changes: the card reflows,
+  // changing the boot height. Using ResizeObserver avoids the layout thrashing
+  // of window resize events (which fire on vertical resizes or when the window
+  // exceeds the terminal's max-width).
+  let lastWidth = screen.getBoundingClientRect().width;
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(function () {
+      const newWidth = screen.getBoundingClientRect().width;
+      if (newWidth !== lastWidth) {
+        lastWidth = newWidth;
+        fitScreen();
+      }
     });
-  });
+    ro.observe(screen);
+  } else {
+    let resizeFrame = 0;
+    window.addEventListener("resize", function () {
+      if (resizeFrame) return;
+      resizeFrame = requestAnimationFrame(function () {
+        resizeFrame = 0;
+        const newWidth = screen.getBoundingClientRect().width;
+        if (newWidth !== lastWidth) {
+          lastWidth = newWidth;
+          fitScreen();
+        }
+      });
+    });
+  }
 
   // Echo the typed command, reusing the prompt/run styling. textContent
   // only — never innerHTML — so typed input can't inject markup.
