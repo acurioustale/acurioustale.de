@@ -22,11 +22,11 @@ help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested i
 ```text
 .
 ├── index.html          ← the page (markup + the inline pre-paint theme guard)
-├── css/style.css       ← terminal styling, light/dark via CSS custom properties
+├── css/style.css       ← terminal styling, light/dark via light-dark() tokens
 ├── js/                 ← theme toggle + terminal easter egg, and their pure logic
 ├── test/               ← unit tests for the pure logic (node --test)
-├── tools/              ← dev-time CI checks (CSP hash, og-image dimensions)
-├── assets/             ← favicon, apple-touch icon, Open Graph share image
+├── tools/              ← dev-time CI checks (CSP hash, og-image, inline-script extraction)
+├── assets/             ← favicon (SVG + 32px PNG), apple-touch icon, Open Graph share image
 ├── .htaccess           ← Apache security headers + production CSP (deployed)
 ├── robots.txt          ← allow-all crawl rule + sitemap pointer
 ├── sitemap.xml         ← single-page sitemap
@@ -34,10 +34,10 @@ help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested i
 ├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
 ├── lychee.toml         ← link-checker config (used by the links workflow)
 ├── SECURITY.md         ← security policy: how to report a vulnerability
-├── package.json        ← npm-only lint tools (ESLint, stylelint, markdownlint, svgo)
+├── package.json        ← npm-only dev tools (ESLint, stylelint, markdownlint-cli2, Prettier, svgo)
 ├── .github/workflows/  ← deploy (gating checks) + links (lychee) CI
 ├── validate.sh         ← run all gating CI checks locally
-└── deploy.sh           ← rsync deploy to the web host
+└── deploy.sh           ← rsync deploy to the web host (via staging directory)
 ```
 
 ## Development
@@ -54,16 +54,18 @@ linting, the unit tests and the CSP/og-image guards). Install the tools once,
 then run the script:
 
 ```bash
-brew install vnu prettier shellcheck shfmt actionlint   # one-time
-npm install                                             # one-time (ESLint, stylelint, markdownlint, svgo)
+brew install vnu shellcheck shfmt actionlint   # one-time
+npm install                                    # one-time (ESLint, stylelint, markdownlint-cli2, Prettier, svgo)
 ./validate.sh
 ```
 
 `validate.sh` skips any of the brew-installed CLIs that aren't present (with a
 notice — CI always enforces them), so it stays runnable on a fresh checkout;
-Node and npm are the only hard requirements. When a pinned tool (Prettier, shfmt,
+Node and npm are the only hard requirements. When a pinned brew CLI (shfmt,
 actionlint) _is_ present, it asserts the version matches the one in `.tool-versions`,
 so a drifted local tool is caught before it surfaces as a mystery CI reformat.
+Node is also pinned in `.tool-versions`; a version mismatch there emits a warning
+(not a hard error) since it can still pass locally while behaving differently in CI.
 
 Links are checked separately (they need the network and external hosts flake, so
 they never gate a deploy) — on pull requests and a weekly schedule via the
@@ -93,26 +95,34 @@ caught; a stale-but-correctly-sized one is on you to remember to regenerate.
 Pushing to `main` deploys automatically. The
 [`deploy` workflow](.github/workflows/deploy.yml) first runs a `validate` gate: it
 validates the HTML, CSS and SVG with the
-[Nu Html Checker](https://validator.github.io/validator/), checks formatting with
-Prettier, keeps the SVGs optimised with svgo, lints the shell scripts
-(ShellCheck, shfmt), the workflows (actionlint), and the JS, JSON, CSS and
-Markdown (ESLint, stylelint, markdownlint-cli2), runs the unit tests
-(`node --test`), and checks the CSP hash and og-image dimensions. Only if
-everything passes does it run `deploy.sh`. The workflow runs on every push to `main` (and can be triggered
-manually from the Actions tab); pull requests run the same gate without deploying.
-Both jobs run with least-privilege `GITHUB_TOKEN` scopes (`permissions:
-contents: read`): neither writes to the repo, and the deploy authenticates to
-the host over SSH rather than the token.
+[Nu Html Checker](https://validator.github.io/validator/), checks XML
+well-formedness of `sitemap.xml` (xmllint), checks formatting with Prettier,
+keeps the SVGs optimised with svgo, lints the shell scripts (ShellCheck, shfmt),
+the workflows (actionlint), and the JS, JSON, inline HTML scripts, CSS and
+Markdown (ESLint with `@eslint/json` and `eslint-plugin-html`, stylelint,
+markdownlint-cli2), runs the unit tests (`node --test`), and checks the CSP hash
+and og-image dimensions. Only if everything passes does it run `deploy.sh`. The
+workflow runs on every push to `main` (and can be triggered manually from the
+Actions tab); pull requests run the same gate without deploying. Both jobs run
+with least-privilege `GITHUB_TOKEN` scopes (`permissions: contents: read`):
+neither writes to the repo, and the deploy authenticates to the host over SSH
+rather than the token.
 Link checking runs separately (see Development) so flaky external hosts never
 block a deploy.
 
-`deploy.sh` is an `rsync -avz --delete` of `index.html`, `.htaccess`,
-`robots.txt`, `sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/` to the web
-root on the host:
+`deploy.sh` copies the deploy set — `index.html`, `.htaccess`, `robots.txt`,
+`sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/` — into a temporary
+staging directory, stamps the current Unix-millisecond time into `LAST_DEPLOY` in
+the staged `js/commands.js` (so the terminal's `uptime` counts from the live
+deploy), then mirrors the staging directory to the web root on the host with
+`rsync -avz --delete`:
 
 ```text
 web4186@http2.core-networks.de:html/acurioustale.de/
 ```
+
+The staging-directory approach means the git working tree is never modified — no
+dirty files, no restore-on-exit races with local dev servers.
 
 CI authenticates with a dedicated SSH deploy key, stored as the repository
 secrets `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. The key is harmless if
@@ -130,11 +140,11 @@ To deploy by hand instead (uses your own SSH access), run:
 ./deploy.sh --dry-run  # preview what would change
 ```
 
-The `--delete` flag keeps the deployed `css/` and `assets/` directories in sync —
-files removed locally are removed on the server too. Only the files listed above
-(`index.html`, `.htaccess`, `robots.txt`, `sitemap.xml`, `humans.txt`, `css/`,
-`js/` and `assets/`) are pushed, so unrelated files elsewhere in the web root are
-left untouched.
+The `--delete` flag keeps the deployed `css/`, `js/` and `assets/` directories
+in sync — files removed locally are removed on the server too. Only the files
+listed above (`index.html`, `.htaccess`, `robots.txt`, `sitemap.xml`,
+`humans.txt`, `css/`, `js/` and `assets/`) are pushed, so unrelated files
+elsewhere in the web root are left untouched.
 
 ### Security headers
 

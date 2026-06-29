@@ -15,35 +15,42 @@ no bundling.
 
 ```bash
 python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
-npm run lint                  # lint JS, CSS and Markdown (ESLint, stylelint, markdownlint-cli2)
+npm run lint                  # lint JS, JSON, CSS and Markdown (ESLint, stylelint, markdownlint-cli2)
 npm run format                # Prettier write across the repo (format:check verifies; used by CI)
 npm test                      # run unit tests (node --test)
-./validate.sh                 # run the FULL gate locally: shell, format, lint, tests, csp, og-image, svg
+npm run links                 # check links locally (lychee, separate from CI gate)
+./validate.sh                 # run the FULL gate locally: shell, format, lint, tests, xml, csp, og-image, svg
 ./validate.sh --clean         # run with a clean install (npm ci) first, matching CI exactly
 ./deploy.sh                   # deploy to production by hand (uses your own SSH access)
 ./deploy.sh --dry-run         # preview what the deploy would change
 ```
 
 There is no build step for the site — edit the files and reload the browser. CI
-validates the HTML, CSS and SVG (Nu Html Checker), checks formatting (Prettier),
-keeps the SVGs optimised (svgo), lints the shell scripts (ShellCheck and shfmt),
-the workflows (actionlint), the JS and JSON (ESLint), the CSS (stylelint) and the
-Markdown (markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`)
-and the CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`)
-on every push and pull request, and deploys are gated on all of them passing. Run
+validates the HTML, CSS and SVG (Nu Html Checker), checks XML well-formedness of
+`sitemap.xml` (xmllint), checks formatting (Prettier), keeps the SVGs optimised
+(svgo), lints the shell scripts (ShellCheck and shfmt), the workflows
+(actionlint), the JS, JSON and inline HTML scripts (ESLint with `@eslint/json`
+and `eslint-plugin-html`), the CSS (stylelint) and the Markdown
+(markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`) and the
+CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`) on
+every push and pull request, and deploys are gated on all of them passing. Run
 the same checks locally with `./validate.sh` (needs `brew install vnu
-shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: Prettier, ESLint,
-stylelint, markdownlint-cli2 and svgo). `validate.sh` skips any brew CLI that
-isn't installed (with a notice — CI still enforces it) so it runs on a fresh
-checkout; Node and npm are the only hard requirements. Link checking is separate
-and non-gating — the `links` workflow runs lychee on pull requests and a weekly
-schedule. ESLint/stylelint/markdownlint/svgo are the only tools needing
-`package.json`; the tests and guards use only Node's standard library, and the
-site itself still ships no dependencies. Prettier uses its defaults; keep the
-Prettier, shfmt and actionlint versions pinned in `.tool-versions` in sync with
-`validate.sh`, which asserts the local versions match when present (so drift is
-caught before push). `.claude/launch.json` defines a "site" launch config that
-serves on port 4174.
+shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: Prettier,
+ESLint, stylelint, markdownlint-cli2 and svgo; xmllint ships with macOS/Xcode but
+can also be installed via `brew install libxml2`). `validate.sh` skips any brew
+CLI that isn't installed (with a notice — CI still enforces it) so it runs on a
+fresh checkout; Node and npm are the only hard requirements. Link checking is
+separate and non-gating — the `links` workflow runs lychee on pull requests and a
+weekly schedule. The dev dependencies that need `package.json` are ESLint (plus
+`@eslint/js`, `@eslint/json`, `eslint-plugin-html` and `globals`), stylelint
+(plus `stylelint-config-standard`), markdownlint-cli2, Prettier, and svgo; the
+tests and guards use only Node's standard library, and the site itself still ships
+no dependencies. Prettier uses its defaults; keep the Prettier, shfmt, actionlint
+and Node versions pinned in `.tool-versions` in sync with the project — `validate.sh`
+asserts the shfmt and actionlint versions when present (hard errors on mismatch;
+Node is a warning), while Prettier's version is enforced via the npm lockfile.
+`.claude/launch.json` defines a
+"site" launch config that serves on port 4174.
 
 Two transitive dev dependencies of `markdownlint-cli2` carried advisories and are
 pinned to patched versions through `overrides` in `package.json`: `markdown-it`
@@ -95,25 +102,33 @@ Keep these consistent: the `localStorage` key is `"theme"` with values
 attribute on `<html>`. The two `<meta name="theme-color">` values (one per
 `prefers-color-scheme`) must equal the CSS `--page-bg` light/dark sides;
 `test/themeColor.test.js` enforces that so the browser chrome can't drift from
-the page background.
+the page background. `test/themeGuard.test.js` verifies the inline pre-paint
+guard stays consistent with the module-based `normalizeMode()` by extracting and
+evaluating the inline scripts (via `tools/inline-scripts.mjs`).
 
 ## JavaScript layout and the CSP
 
 `index.html` carries exactly one inline script — the pre-paint theme guard above.
-Everything else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the
-toggle UI) and `terminal.js` (the interactive guest-shell easter egg, desktop
-only, unrelated to theming). The card is dressed as a macOS Terminal session and
-the prompt accepts commands: `ls` lists the directory (`projects/` and
-`whoami.sh`), which you then run as in a real shell — `./whoami.sh` and
-`ls projects/` reprint the boot blocks; `uptime`/`date`/`echo` behave like their
-shell namesakes, `sudo` returns the classic lecture, `clear` empties the screen
-(hiding the boot output, like a real terminal), and `help` lists the commands
-(the filesystem entries are discovered via `ls`, not advertised). Everything else
-is denied with a fitting shell error. The pure logic each depends
-on is factored out for testing — `theme.js` (`nextTheme()`) and `commands.js`
-(`reply()` for the command replies and denials, `help()` for the listing) — and
-exercised by `test/`. The DOM glue in the two UI modules is thin
-and verified in the browser, not unit-tested.
+(A `<script type="application/ld+json">` block provides structured data for
+search engines; it's data, not executable, and needs no CSP hash.) Everything
+else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the toggle UI)
+and `terminal.js` (the interactive guest-shell easter egg, desktop only, unrelated
+to theming). The card is dressed as a macOS Terminal session and the prompt accepts
+commands: `ls` lists the directory (`projects/` and `whoami.sh`), which you then
+run as in a real shell — `./whoami.sh` and `ls projects/` reprint the boot
+blocks; `uptime`/`date`/`echo` behave like their shell namesakes, `sudo` returns
+the classic lecture, `clear` empties the screen (hiding the boot output, like a
+real terminal), and `help` lists the commands (the filesystem entries are
+discovered via `ls`, not advertised). Everything else is denied with a fitting
+shell error (privileged commands like `su`/`doas`/`chmod`/`chown` get "permission
+denied", paths with `/` get "No such file or directory", anything else gets
+"command not found"). The pure logic each depends on is factored out for
+testing — `theme.js` (`nextTheme()`, `normalizeMode()`) and `commands.js`
+(`reply()` for the command replies and denials, `help()` for the listing,
+`formatUptime()` for the `uptime` output) — and exercised by `test/theme.test.js`,
+`test/commands.test.js`, `test/themeColor.test.js` and `test/themeGuard.test.js`.
+The DOM glue in the two UI modules is thin and verified in the browser, not
+unit-tested.
 
 The page sends a strict Content-Security-Policy **twice**: a `<meta http-equiv>`
 tag in `index.html` and an HTTP header in `.htaccess`. Both are `default-src
@@ -131,25 +146,29 @@ editing:
   `expected token` it prints into the `script-src` list in **both `index.html` and
   `.htaccess`**, and re-run. New external scripts under `js/` need no hash (covered
   by `'self'`); a `<script>` of a non-JS type like `application/ld+json` is data,
-  not executed, and needs none either.
+  not executed, and needs none either. The inline-script extraction logic used by
+  `check-csp.mjs` is shared in `tools/inline-scripts.mjs` (also used by
+  `test/themeGuard.test.js`).
 - The other security headers (`X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`, `Permissions-Policy`) and long-cache for static images also
-  live in `.htaccess`. None of these apply under the python dev server; verify
-  them after a deploy with `curl -sI https://acurioustale.de/`.
+  `Referrer-Policy`, `Permissions-Policy`) and caching rules (long-cache for
+  static images, no-cache for HTML/CSS/JS) also live in `.htaccess`. None of
+  these apply under the python dev server; verify them after a deploy with
+  `curl -sI https://acurioustale.de/`.
 - `.htaccess` is in the deploy set and ships to the web root; the rsync jail's
   path prefix already covers it, so no server-side change is needed.
 
 ## Deployment
 
 Pushing to `main` auto-deploys via `.github/workflows/deploy.yml`, which runs
-`deploy.sh` (an `rsync -avz --delete` of `index.html`, `.htaccess`, `robots.txt`,
-`sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`). Before the rsync,
-`deploy.sh` shells out to `node` to stamp the current time into `LAST_DEPLOY` in
-`js/commands.js` (so the terminal's `uptime` counts from the live deploy), backs
-the file up outside the repo and restores it on exit, so the edit ships to the
-host but never lands in git; the `deploy` job therefore sets up Node too. CI
-authenticates with
-the `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets. The workflow sets
+`deploy.sh`. The script copies the deploy set (`index.html`, `.htaccess`,
+`robots.txt`, `sitemap.xml`, `humans.txt`, `css/`, `js/` and `assets/`) into a
+temporary staging directory, stamps the current Unix-millisecond time into
+`LAST_DEPLOY` in the **staged** `js/commands.js` (so the terminal's `uptime`
+counts from the live deploy), then mirrors the staging directory to the host with
+`rsync -avz --delete`. The staging approach means the git working tree is never
+modified — no dirty files, no restore-on-exit races. The `deploy` job therefore
+sets up Node (for the stamping) in addition to SSH. CI authenticates with the
+`DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` repo secrets. The workflow sets
 least-privilege token scopes at the top level (`permissions: contents: read`) —
 neither the `validate` nor the `deploy` job writes to the repo (deploy
 authenticates over SSH, not the `GITHUB_TOKEN`), so keep that block if you edit
@@ -162,6 +181,6 @@ deploy. See the README for the full explanation.
 
 ## Conventions
 
-Commits follow Conventional Commits (`type(scope): imperative`, lowercase, ≤72-char header, no attribution trailers, hyphens not dashes). Scopes seen in history: `ui`, `theme`, `terminal`, `security`, `validate`, `links`, `deploy`, `deps`. Versioning is SemVer.
+Commits follow Conventional Commits (`type(scope): imperative`, lowercase, ≤72-char header, no attribution trailers, hyphens not dashes). Scopes seen in history: `deploy`, `js`, `terminal`, `security`, `commands`, `tools`, `validate`, `links`, `deps`, `site`. Versioning is SemVer.
 
 Formatting and linting are tool-enforced (Prettier, shfmt, stylelint, markdownlint, svgo, actionlint) — run `./validate.sh` before pushing to catch exactly what CI gates. Keep a large mechanical reformat in its own commit and list it in `.git-blame-ignore-revs` so `git blame` skips it.
