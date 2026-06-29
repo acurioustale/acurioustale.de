@@ -15,6 +15,11 @@ no bundling.
 
 ```bash
 python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
+npm run lint                  # lint JS, CSS and Markdown (ESLint, stylelint, markdownlint-cli2)
+npm run format                # Prettier write across the repo (format:check verifies; used by CI)
+npm test                      # run unit tests (node --test)
+./validate.sh                 # run the FULL gate locally: shell, format, lint, tests, csp, og-image, svg
+./validate.sh --clean         # run with a clean install (npm ci) first, matching CI exactly
 ./deploy.sh                   # deploy to production by hand (uses your own SSH access)
 ./deploy.sh --dry-run         # preview what the deploy would change
 ```
@@ -26,8 +31,8 @@ the workflows (actionlint), the JS and JSON (ESLint), the CSS (stylelint) and th
 Markdown (markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`)
 and the CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`)
 on every push and pull request, and deploys are gated on all of them passing. Run
-the same checks locally with `./validate.sh` (needs `brew install vnu prettier
-shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: ESLint,
+the same checks locally with `./validate.sh` (needs `brew install vnu
+shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: Prettier, ESLint,
 stylelint, markdownlint-cli2 and svgo). `validate.sh` skips any brew CLI that
 isn't installed (with a notice — CI still enforces it) so it runs on a fresh
 checkout; Node and npm are the only hard requirements. Link checking is separate
@@ -154,3 +159,9 @@ The `TARGET` in `deploy.sh` **must keep its trailing slash** (`html/acurioustale
 The deploy key is jailed server-side to a forced `rsync` command that matches that
 exact path prefix — no shell, no pull, no traversal. Changing the target breaks the
 deploy. See the README for the full explanation.
+
+## Conventions
+
+Commits follow Conventional Commits (`type(scope): imperative`, lowercase, ≤72-char header, no attribution trailers, hyphens not dashes). Scopes seen in history: `ui`, `theme`, `terminal`, `security`, `validate`, `links`, `deploy`, `deps`. Versioning is SemVer.
+
+Formatting and linting are tool-enforced (Prettier, shfmt, stylelint, markdownlint, svgo, actionlint) — run `./validate.sh` before pushing to catch exactly what CI gates. Keep a large mechanical reformat in its own commit and list it in `.git-blame-ignore-revs` so `git blame` skips it.
