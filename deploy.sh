@@ -13,7 +13,7 @@ cd "$(dirname "$0")"
 backup="$(mktemp)"
 cp js/commands.js "$backup"
 stage="$(mktemp -d)"
-trap 'mv -f "$backup" js/commands.js 2>/dev/null || true; rm -rf "$stage"' EXIT INT TERM
+trap 'mv -f "$backup" js/commands.js 2>/dev/null || echo "deploy: WARNING could not restore js/commands.js; original saved at $backup" >&2; rm -rf "$stage"' EXIT INT TERM
 
 echo "==> Updating deploy timestamp in js/commands.js"
 node -e '
