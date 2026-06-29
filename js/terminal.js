@@ -160,6 +160,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
   const history = [];
   let historyIndex = 0;
+  let currentBuffer = "";
 
   function run() {
     const raw = input.value;
@@ -170,6 +171,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       history.push(raw);
     }
     historyIndex = history.length;
+    currentBuffer = "";
 
     // Normalize internal consecutive whitespace to a single space for matching.
     const cmd = rawCmd.replace(/\s+/g, " ");
@@ -216,6 +218,9 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (historyIndex > 0) {
+        if (historyIndex === history.length) {
+          currentBuffer = input.value;
+        }
         historyIndex--;
         input.value = history[historyIndex];
         size();
@@ -228,7 +233,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
         size();
       } else if (historyIndex === history.length - 1) {
         historyIndex++;
-        input.value = "";
+        input.value = currentBuffer;
         size();
       }
     }
