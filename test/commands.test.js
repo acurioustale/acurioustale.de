@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { reply, help } from "../js/commands.js";
+import { reply, help, formatUptime } from "../js/commands.js";
 
 test("privileged commands are denied with permission denied", () => {
   for (const cmd of ["su", "doas", "chmod", "chown"]) {
@@ -35,8 +35,48 @@ test("uptime returns calculated uptime string", () => {
   assert.match(reply("uptime"), /^up \d/);
 });
 
-test("date returns a date string", () => {
-  assert.ok(reply("date").length > 10);
+// formatUptime is pure, so exercise every branch directly — reply("uptime")
+// alone only ever hits one form (whatever the real elapsed time happens to be).
+const MIN = 60000;
+const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
+
+test("formatUptime shows minutes only under an hour", () => {
+  assert.equal(formatUptime(0), "up 0 min");
+  assert.equal(formatUptime(5 * MIN), "up 5 min");
+  assert.equal(formatUptime(59 * MIN), "up 59 min");
+});
+
+test("formatUptime switches to H:MM at an hour, zero-padding minutes", () => {
+  assert.equal(formatUptime(HOUR), "up 1:00");
+  assert.equal(formatUptime(3 * HOUR + 7 * MIN), "up 3:07");
+  assert.equal(formatUptime(23 * HOUR + 59 * MIN), "up 23:59");
+});
+
+test("formatUptime prefixes the day count, singular and plural", () => {
+  assert.equal(formatUptime(DAY + 3 * HOUR + 4 * MIN), "up 1 day, 3:04");
+  assert.equal(formatUptime(2 * DAY + 13 * HOUR), "up 2 days, 13:00");
+});
+
+test("formatUptime keeps the minutes-only form past a day when the hour is 0", () => {
+  // The regression this guards: it must read "up 1 day, 5 min", not "0:05".
+  assert.equal(formatUptime(DAY + 5 * MIN), "up 1 day, 5 min");
+  assert.equal(formatUptime(2 * DAY), "up 2 days, 0 min");
+});
+
+test("formatUptime clamps a negative (backwards clock) to up 0 min", () => {
+  assert.equal(formatUptime(-5 * MIN), "up 0 min");
+  assert.equal(formatUptime(-DAY), "up 0 min");
+});
+
+test("date returns a Date.toString()-style string", () => {
+  // Assert the actual shape (weekday, month, day, year, time, GMT offset) so a
+  // broken date branch can't slip through, rather than just a length bound any
+  // non-empty string would clear.
+  assert.match(
+    reply("date"),
+    /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2} \d{4} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}/,
+  );
 });
 
 test("echo echoes back arguments", () => {
@@ -98,10 +138,13 @@ const commandsSource = readFileSync(
   "utf8",
 );
 
-// Commands terminal.js dispatches on: every `cmd === "..."` literal.
-// Plus commands commands.js handles directly: every `argv[0] === "..."` literal.
+// Commands terminal.js dispatches on: every `cmd === "..."` literal, plus the
+// keys of the BLOCKS map (commands that replay a static block, written as
+// `"cmd": ".selector"`). Plus commands commands.js handles directly: every
+// `argv[0] === "..."` literal.
 const dispatched = new Set([
   ...[...terminalSource.matchAll(/cmd === "([^"]+)"/g)].map((m) => m[1]),
+  ...[...terminalSource.matchAll(/"([^"]+)":\s*"\.[\w-]+"/g)].map((m) => m[1]),
   ...[...commandsSource.matchAll(/argv\[0\] === "([^"]+)"/g)].map((m) => m[1]),
 ]);
 
@@ -114,9 +157,8 @@ const advertised = help()
   .filter(Boolean);
 
 // Commands terminal.js accepts but help() intentionally omits: the filesystem
-// entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects/`),
-// and the trailing-slash-less `ls projects` alias.
-const ALIASES = new Set(["ls projects", "ls projects/", "./whoami.sh"]);
+// entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects`).
+const ALIASES = new Set(["ls projects", "./whoami.sh"]);
 
 test("every command help() lists is actually dispatched by terminal.js", () => {
   for (const cmd of advertised) {

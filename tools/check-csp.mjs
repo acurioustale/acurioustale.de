@@ -11,6 +11,7 @@
 // not a general HTML/Apache parser.
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { inlineScripts } from "./inline-scripts.mjs";
 
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const htaccess = await readFile(
@@ -43,13 +44,11 @@ for (const { name, csp } of policies) {
 }
 if (failed) process.exit(1);
 
-// Every <script> element in index.html, capturing opening-tag attributes + body.
-const scripts = [
-  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script(?:\s[^>]*)?>/gi),
-];
+// Every inline <script> in index.html (external scripts are covered by
+// script-src 'self' and carry no inline body to hash).
+const scripts = inlineScripts(html);
 
-for (const [, attrs, body] of scripts) {
-  if (/\bsrc=/i.test(attrs)) continue; // external: covered by script-src 'self'
+for (const { attrs, body } of scripts) {
   const type = (attrs.match(/\btype=["']([^"']*)["']/i) || [])[1];
   // Non-JS data blocks (e.g. application/ld+json) are not executed and so are
   // not subject to script-src; only real inline scripts need a hash.

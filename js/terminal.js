@@ -8,9 +8,17 @@ import { reply, help } from "./commands.js";
 // reprint the whoami card and the projects list.
 const last = document.querySelector(".prompt-last");
 
-// Desktop only: on touch devices the static cursor is left untouched so
-// a stray tap never pops up the on-screen keyboard.
-if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
+// Desktop only: enable the input only on a device with a fine pointer and no
+// touch at all, so a stray tap never pops up the on-screen keyboard. Checking
+// `(pointer: fine)` alone isn't enough — it reports the primary pointer, so a
+// touchscreen laptop or a tablet with a trackpad still matches; excluding
+// `(any-pointer: coarse)` leaves those hybrids on the static cursor.
+if (
+  last &&
+  window.matchMedia &&
+  window.matchMedia("(pointer: fine)").matches &&
+  !window.matchMedia("(any-pointer: coarse)").matches
+) {
   const screen = last.parentNode;
   const cursor = last.querySelector(".cursor");
 
@@ -126,6 +134,15 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     log.appendChild(out);
   }
 
+  // Commands that replay a static block, keyed by the canonical command and
+  // mapped to the selector they reprint. A trailing slash on the path is
+  // ignored (so `ls projects` and `ls projects/` are one command); to support
+  // another listable block, add a row here rather than another branch.
+  const BLOCKS = {
+    "./whoami.sh": ".whoami",
+    "ls projects": ".projects",
+  };
+
   function run() {
     const raw = input.value;
     const cmd = raw.trim();
@@ -146,10 +163,9 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
     // Commands that produce real output replay the matching static block;
     // help lists them; everything else is denied with reply()'s flavour.
-    if (cmd === "./whoami.sh") {
-      echoBlock(".whoami");
-    } else if (cmd === "ls projects/" || cmd === "ls projects") {
-      echoBlock(".projects");
+    const blockSelector = BLOCKS[cmd.replace(/\/+$/, "")];
+    if (blockSelector) {
+      echoBlock(blockSelector);
     } else if (cmd === "help") {
       helpBlock();
     } else {
@@ -182,7 +198,11 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   document.addEventListener("keydown", function (e) {
     const ae = document.activeElement;
     if (ae && ae !== document.body) return;
-    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
+    // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
+    const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
+    if (e.metaKey || ((e.ctrlKey || e.altKey) && !altGraph)) return;
+    if (e.key.length !== 1) return;
     input.focus({ preventScroll: true });
   });
 

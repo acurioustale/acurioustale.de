@@ -21,23 +21,22 @@ export function help() {
   ].join("\n");
 }
 
-// Mirror real `uptime`: minutes only under an hour ("up 5 min"), H:MM once past
-// an hour, with a leading "D day(s)," past a day. Clamp negatives so a backwards
-// clock (or a checkout whose LAST_DEPLOY is still in the future) can't print
-// "up -1 days".
-function formatUptime(ms) {
+// Mirror real `uptime`: minutes only while under an hour into the current day
+// ("up 5 min", "up 1 day, 5 min"), H:MM once an hour in ("up 3:07"), with a
+// leading "D day(s)," past a day. Clamp negatives so a backwards clock (or a
+// checkout whose LAST_DEPLOY is still in the future) can't print "up -1 days".
+export function formatUptime(ms) {
   const totalMins = Math.max(0, Math.floor(ms / 60000));
   const days = Math.floor(totalMins / 1440);
   const hours = Math.floor((totalMins % 1440) / 60);
   const mins = totalMins % 60;
-  if (days === 0 && hours === 0) {
-    return `up ${mins} min`;
+  const dayPrefix = days > 0 ? `${days} ${days === 1 ? "day" : "days"}, ` : "";
+  // Like real `uptime`, the minutes-only form applies whenever the hour
+  // component is zero, even when a day prefix is present.
+  if (hours === 0) {
+    return `up ${dayPrefix}${mins} min`;
   }
-  const timeStr = `${hours}:${mins < 10 ? "0" + mins : mins}`;
-  if (days > 0) {
-    return `up ${days} ${days === 1 ? "day" : "days"}, ${timeStr}`;
-  }
-  return `up ${timeStr}`;
+  return `up ${dayPrefix}${hours}:${mins < 10 ? "0" + mins : mins}`;
 }
 
 // Handle the commands terminal.js doesn't render as a block. A few produce real
@@ -78,7 +77,10 @@ export function reply(cmd) {
     return argv.slice(1).join(" ");
   }
   if (cleanCmd.includes("/")) {
-    return "bash: " + argv[argv.length - 1] + ": No such file or directory";
+    // Name the path-like argument that triggered this branch — the first token
+    // containing a slash — not just the last token, which may be a plain word.
+    const pathArg = argv.find((a) => a.includes("/")) || argv[argv.length - 1];
+    return "bash: " + pathArg + ": No such file or directory";
   }
   return "bash: " + argv[0] + ": command not found";
 }

@@ -119,12 +119,20 @@ echo "==> Checking the og-image dimensions"
 npm run --silent check:og
 
 echo "==> Checking SVG optimisation (svgo)"
+# Run svgo into a temp file so a svgo crash (bad fetch, config error) is
+# distinguished from a genuinely unoptimised SVG, instead of pipefail turning
+# both into the same misleading "not optimised" message.
+svgo_out="$(mktemp)"
+trap 'rm -f "$svgo_out"' EXIT
 for f in assets/favicon.svg og-image.src.svg; do
-	npx svgo --config svgo.config.mjs -i "$f" -o - | diff -q - "$f" >/dev/null ||
-		{
-			echo "  $f is not optimised; run: npx svgo --config svgo.config.mjs $f"
-			exit 1
-		}
+	if ! npx svgo --config svgo.config.mjs -i "$f" -o "$svgo_out" >/dev/null; then
+		echo "  svgo failed to process $f"
+		exit 1
+	fi
+	if ! diff -q "$svgo_out" "$f" >/dev/null; then
+		echo "  $f is not optimised; run: npx svgo --config svgo.config.mjs $f"
+		exit 1
+	fi
 done
 
 echo "==> All checks passed"
