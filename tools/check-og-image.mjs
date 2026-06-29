@@ -13,8 +13,12 @@ const path = new URL("../assets/og-image.png", import.meta.url);
 
 const file = await open(path, "r");
 const buf = Buffer.alloc(24);
-const { bytesRead } = await file.read(buf, 0, 24, 0);
-await file.close();
+let bytesRead;
+try {
+  ({ bytesRead } = await file.read(buf, 0, 24, 0));
+} finally {
+  await file.close();
+}
 
 // PNG: 8-byte signature, then the IHDR chunk (length+type) with width and
 // height as big-endian uint32 at byte offsets 16 and 20.
