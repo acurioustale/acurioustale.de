@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { reply, help } from "../js/commands.js";
+import { reply, help, formatUptime } from "../js/commands.js";
 
 test("privileged commands are denied with permission denied", () => {
   for (const cmd of ["su", "doas", "chmod", "chown"]) {
@@ -33,6 +33,40 @@ test("ls of any other path errors like real ls", () => {
 
 test("uptime returns calculated uptime string", () => {
   assert.match(reply("uptime"), /^up \d/);
+});
+
+// formatUptime is pure, so exercise every branch directly — reply("uptime")
+// alone only ever hits one form (whatever the real elapsed time happens to be).
+const MIN = 60000;
+const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
+
+test("formatUptime shows minutes only under an hour", () => {
+  assert.equal(formatUptime(0), "up 0 min");
+  assert.equal(formatUptime(5 * MIN), "up 5 min");
+  assert.equal(formatUptime(59 * MIN), "up 59 min");
+});
+
+test("formatUptime switches to H:MM at an hour, zero-padding minutes", () => {
+  assert.equal(formatUptime(HOUR), "up 1:00");
+  assert.equal(formatUptime(3 * HOUR + 7 * MIN), "up 3:07");
+  assert.equal(formatUptime(23 * HOUR + 59 * MIN), "up 23:59");
+});
+
+test("formatUptime prefixes the day count, singular and plural", () => {
+  assert.equal(formatUptime(DAY + 3 * HOUR + 4 * MIN), "up 1 day, 3:04");
+  assert.equal(formatUptime(2 * DAY + 13 * HOUR), "up 2 days, 13:00");
+});
+
+test("formatUptime keeps the minutes-only form past a day when the hour is 0", () => {
+  // The regression this guards: it must read "up 1 day, 5 min", not "0:05".
+  assert.equal(formatUptime(DAY + 5 * MIN), "up 1 day, 5 min");
+  assert.equal(formatUptime(2 * DAY), "up 2 days, 0 min");
+});
+
+test("formatUptime clamps a negative (backwards clock) to up 0 min", () => {
+  assert.equal(formatUptime(-5 * MIN), "up 0 min");
+  assert.equal(formatUptime(-DAY), "up 0 min");
 });
 
 test("date returns a date string", () => {

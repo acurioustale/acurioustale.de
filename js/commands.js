@@ -25,7 +25,7 @@ export function help() {
 // ("up 5 min", "up 1 day, 5 min"), H:MM once an hour in ("up 3:07"), with a
 // leading "D day(s)," past a day. Clamp negatives so a backwards clock (or a
 // checkout whose LAST_DEPLOY is still in the future) can't print "up -1 days".
-function formatUptime(ms) {
+export function formatUptime(ms) {
   const totalMins = Math.max(0, Math.floor(ms / 60000));
   const days = Math.floor(totalMins / 1440);
   const hours = Math.floor((totalMins % 1440) / 60);
