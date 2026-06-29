@@ -12,7 +12,8 @@ cd "$(dirname "$0")"
 # without touching git and preserves any uncommitted local edits.
 backup="$(mktemp)"
 cp js/commands.js "$backup"
-trap 'mv -f "$backup" js/commands.js 2>/dev/null || true' EXIT INT TERM
+stage="$(mktemp -d)"
+trap 'mv -f "$backup" js/commands.js 2>/dev/null || true; rm -rf "$stage"' EXIT INT TERM
 
 echo "==> Updating deploy timestamp in js/commands.js"
 node -e '
@@ -30,6 +31,11 @@ node -e '
 REMOTE="web4186@http2.core-networks.de"
 TARGET="html/acurioustale.de/"
 
-rsync -avz --delete "$@" \
-	index.html .htaccess robots.txt sitemap.xml humans.txt css js assets \
-	"${REMOTE}:${TARGET}"
+# Stage exactly the deploy set, then mirror that directory. A flat file list
+# with --delete only prunes inside the synced subdirectories (css/, js/,
+# assets/), never the target root, so a file dropped from the set would linger
+# on the host forever. Syncing a directory that holds only the deploy set lets
+# --delete remove anything no longer shipped. TARGET is unchanged, so the
+# server-side rsync jail still matches.
+cp -R index.html .htaccess robots.txt sitemap.xml humans.txt css js assets "$stage"/
+rsync -avz --delete "$@" "$stage"/ "${REMOTE}:${TARGET}"
