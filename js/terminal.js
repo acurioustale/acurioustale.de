@@ -43,7 +43,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
   // Grow the field with its content so the block cursor trails the text.
   function size() {
-    input.style.width = [...input.value].length + "ch";
+    input.style.width = input.value.length + "ch";
   }
   size();
   input.addEventListener("input", size);
