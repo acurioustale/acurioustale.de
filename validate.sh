@@ -68,16 +68,18 @@ if have vnu; then
 	step "Validating HTML, CSS and SVG (vnu)"
 	# Select files by extension, exactly like the CI job — prune .git and
 	# node_modules, and never hand vnu the assets/ dir (it parses PNGs as text).
-	files=$(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
-		\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
+	files=()
+	while IFS= read -r -d '' file; do
+		files+=("$file")
+	done < <(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
+		\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print0)
 	# Filter two benign infos. "Trailing slash on void elements": Prettier adds
 	# `/>` as house style and vnu notes (info level) it's a no-op. "Content
 	# Security Policy": vnu checks the page over file://, where script-src 'self'
 	# resolves to a null origin and so appears to block the same-origin js/
 	# modules; over https the policy allows them (verified in-browser).
-	# shellcheck disable=SC2086
 	vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
-		--also-check-css --also-check-svg $files
+		--also-check-css --also-check-svg "${files[@]}"
 else
 	skip vnu "HTML/CSS/SVG validation"
 fi
