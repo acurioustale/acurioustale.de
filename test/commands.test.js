@@ -69,8 +69,14 @@ test("formatUptime clamps a negative (backwards clock) to up 0 min", () => {
   assert.equal(formatUptime(-DAY), "up 0 min");
 });
 
-test("date returns a date string", () => {
-  assert.ok(reply("date").length > 10);
+test("date returns a Date.toString()-style string", () => {
+  // Assert the actual shape (weekday, month, day, year, time, GMT offset) so a
+  // broken date branch can't slip through, rather than just a length bound any
+  // non-empty string would clear.
+  assert.match(
+    reply("date"),
+    /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2} \d{4} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}/,
+  );
 });
 
 test("echo echoes back arguments", () => {
