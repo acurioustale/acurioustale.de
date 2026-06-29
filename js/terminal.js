@@ -8,9 +8,17 @@ import { reply, help } from "./commands.js";
 // reprint the whoami card and the projects list.
 const last = document.querySelector(".prompt-last");
 
-// Desktop only: on touch devices the static cursor is left untouched so
-// a stray tap never pops up the on-screen keyboard.
-if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
+// Desktop only: enable the input only on a device with a fine pointer and no
+// touch at all, so a stray tap never pops up the on-screen keyboard. Checking
+// `(pointer: fine)` alone isn't enough — it reports the primary pointer, so a
+// touchscreen laptop or a tablet with a trackpad still matches; excluding
+// `(any-pointer: coarse)` leaves those hybrids on the static cursor.
+if (
+  last &&
+  window.matchMedia &&
+  window.matchMedia("(pointer: fine)").matches &&
+  !window.matchMedia("(any-pointer: coarse)").matches
+) {
   const screen = last.parentNode;
   const cursor = last.querySelector(".cursor");
 
