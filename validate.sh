@@ -47,8 +47,8 @@ fi
 
 # Select files by extension, exactly like the CI job — prune .git and
 # node_modules, and never hand vnu the assets/ dir (it parses PNGs as text).
-files=$(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
-	\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
+readarray -d '' files < <(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
+	\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print0)
 
 if have vnu; then
 	echo "==> Validating HTML, CSS and SVG (vnu)"
@@ -57,10 +57,8 @@ if have vnu; then
 	# Security Policy": vnu checks the page over file://, where script-src 'self'
 	# resolves to a null origin and so appears to block the same-origin js/
 	# modules; over https the policy allows them (verified in-browser).
-	# $files is intentionally unquoted so each path becomes a separate argument.
-	# shellcheck disable=SC2086
 	vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
-		--also-check-css --also-check-svg $files
+		--also-check-css --also-check-svg "${files[@]}"
 else
 	skip vnu "HTML/CSS/SVG validation"
 fi
