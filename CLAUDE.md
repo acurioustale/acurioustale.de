@@ -35,7 +35,7 @@ and non-gating — the `links` workflow runs lychee on pull requests and a weekl
 schedule. ESLint/stylelint/markdownlint/svgo are the only tools needing
 `package.json`; the tests and guards use only Node's standard library, and the
 site itself still ships no dependencies. Prettier uses its defaults; keep the
-Prettier, shfmt and actionlint versions pinned in `deploy.yml` in sync with
+Prettier, shfmt and actionlint versions pinned in `.tool-versions` in sync with
 `validate.sh`, which asserts the local versions match when present (so drift is
 caught before push). `.claude/launch.json` defines a "site" launch config that
 serves on port 4174.
