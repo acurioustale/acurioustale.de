@@ -28,7 +28,7 @@ if (bar) {
     try {
       if (to === "auto") localStorage.removeItem("theme");
       else localStorage.setItem("theme", to);
-    } catch (e) {}
+    } catch {}
     if (to === "auto") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", to);
   }
