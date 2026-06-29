@@ -11,7 +11,7 @@ stage="$(mktemp -d)"
 # onto the web root and lock Apache out (403, "unable to read .htaccess").
 # Make the staging root web-readable so the deploy keeps the web root at 0755.
 chmod 755 "$stage"
-trap 'rm -rf "$stage"' EXIT INT TERM
+trap 'rm -rf "$stage"' EXIT
 
 REMOTE="web4186@http2.core-networks.de"
 TARGET="html/acurioustale.de/"
