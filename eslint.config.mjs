@@ -25,8 +25,6 @@ export default [
       // Empty catch blocks are intentional: localStorage access throws in some
       // privacy modes, and the guard simply falls back to the default theme.
       "no-empty": ["error", { allowEmptyCatch: true }],
-      // The caught error binding in those guards is deliberately unused.
-      "no-unused-vars": ["error", { caughtErrors: "none" }],
     },
   },
 
