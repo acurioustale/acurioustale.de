@@ -6,11 +6,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 stage="$(mktemp -d)"
-# mktemp -d makes the staging dir 0700. Because the rsync below mirrors this
-# directory with -a (which preserves permissions), that mode would be copied
-# onto the web root and lock Apache out (403, "unable to read .htaccess").
-# Make the staging root web-readable so the deploy keeps the web root at 0755.
-chmod 755 "$stage"
+# mktemp -d makes the staging dir 0700. To avoid making local temporary folders
+# world-readable, we keep 0700 locally and let rsync explicitly set the remote
+# web root permissions via --chmod=D755,F644.
 trap 'rm -rf "$stage"' EXIT
 
 REMOTE="web4186@http2.core-networks.de"
@@ -53,7 +51,7 @@ for arg in "$@"; do
 done
 
 if [[ "${#rsync_args[@]}" -gt 0 ]]; then
-	rsync -avz --delete "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
+	rsync -avz --delete --chmod=D755,F644 "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
 else
-	rsync -avz --delete "$stage"/ "${REMOTE}:${TARGET}"
+	rsync -avz --delete --chmod=D755,F644 "$stage"/ "${REMOTE}:${TARGET}"
 fi
