@@ -21,15 +21,19 @@ export function help() {
   ].join("\n");
 }
 
+export const MS_PER_MIN = 60000;
+export const MIN_PER_HOUR = 60;
+export const MIN_PER_DAY = 1440;
+
 // Mirror real `uptime`: minutes only while under an hour into the current day
 // ("up 5 min", "up 1 day, 5 min"), H:MM once an hour in ("up 3:07"), with a
 // leading "D day(s)," past a day. Clamp negatives so a backwards clock (or a
 // checkout whose LAST_DEPLOY is still in the future) can't print "up -1 days".
 export function formatUptime(ms) {
-  const totalMins = Math.max(0, Math.floor(ms / 60000));
-  const days = Math.floor(totalMins / 1440);
-  const hours = Math.floor((totalMins % 1440) / 60);
-  const mins = totalMins % 60;
+  const totalMins = Math.max(0, Math.floor(ms / MS_PER_MIN));
+  const days = Math.floor(totalMins / MIN_PER_DAY);
+  const hours = Math.floor((totalMins % MIN_PER_DAY) / MIN_PER_HOUR);
+  const mins = totalMins % MIN_PER_HOUR;
   const dayPrefix = days > 0 ? `${days} ${days === 1 ? "day" : "days"}, ` : "";
   // Like real `uptime`, the minutes-only form applies whenever the hour
   // component is zero, even when a day prefix is present.

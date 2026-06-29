@@ -3,7 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { reply, help, formatUptime } from "../js/commands.js";
+import {
+  reply,
+  help,
+  formatUptime,
+  MS_PER_MIN,
+  MIN_PER_HOUR,
+  MIN_PER_DAY,
+} from "../js/commands.js";
 
 test("privileged commands are denied with permission denied", () => {
   for (const cmd of ["su", "doas", "chmod", "chown"]) {
@@ -37,9 +44,9 @@ test("uptime returns calculated uptime string", () => {
 
 // formatUptime is pure, so exercise every branch directly — reply("uptime")
 // alone only ever hits one form (whatever the real elapsed time happens to be).
-const MIN = 60000;
-const HOUR = 60 * MIN;
-const DAY = 24 * HOUR;
+const MIN = MS_PER_MIN;
+const HOUR = MIN_PER_HOUR * MIN;
+const DAY = MIN_PER_DAY * MIN;
 
 test("formatUptime shows minutes only under an hour", () => {
   assert.equal(formatUptime(0), "up 0 min");
