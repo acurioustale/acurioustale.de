@@ -155,10 +155,12 @@ if (
   // mapped to the selector they reprint. A trailing slash on the path is
   // ignored (so `ls projects` and `ls projects/` are one command); to support
   // another listable block, add a row here rather than another branch.
-  const BLOCKS = {
+  // Created with a null prototype so inherited Object.prototype properties
+  // (toString, __proto__, ...) cannot be exploited as commands.
+  const BLOCKS = Object.assign(Object.create(null), {
     "./whoami.sh": ".whoami",
     "ls projects": ".projects",
-  };
+  });
 
   function run() {
     const raw = input.value;
