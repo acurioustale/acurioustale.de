@@ -42,14 +42,17 @@ export function formatUptime(ms) {
 // Handle the commands terminal.js doesn't render as a block. A few produce real
 // output (sudo's lecture, a bare ls listing, uptime, date, echo); the rest get
 // the denial that fits: privileged → permission denied, ls of any path errors
-// like ls, anything else that looks like a path → no such file, otherwise
-// command not found.
+// like ls, anything else where the command name is a path → no such file,
+// otherwise command not found.
+
+// An array, not an object-as-set: a plain object would match inherited
+// Object.prototype members (toString, constructor, …) as commands. Kept at
+// module scope to avoid reallocating the array on every command execution.
+const PRIV = ["su", "doas", "chmod", "chown"];
+
 export function reply(cmd) {
   const cleanCmd = cmd.trim();
   const argv = cleanCmd.split(/\s+/);
-  // An array, not an object-as-set: a plain object would match inherited
-  // Object.prototype members (toString, constructor, …) as commands.
-  const PRIV = ["su", "doas", "chmod", "chown"];
   if (PRIV.includes(argv[0])) return argv[0] + ": permission denied";
   if (argv[0] === "sudo") {
     return [
@@ -76,11 +79,8 @@ export function reply(cmd) {
   if (argv[0] === "echo") {
     return argv.slice(1).join(" ");
   }
-  if (cleanCmd.includes("/")) {
-    // Name the path-like argument that triggered this branch — the first token
-    // containing a slash — not just the last token, which may be a plain word.
-    const pathArg = argv.find((a) => a.includes("/")) || argv[argv.length - 1];
-    return "bash: " + pathArg + ": No such file or directory";
+  if (argv[0].includes("/")) {
+    return "bash: " + argv[0] + ": No such file or directory";
   }
   return "bash: " + argv[0] + ": command not found";
 }
