@@ -220,7 +220,7 @@ if (
   // keyup, so grabbing focus on keydown would swallow the theme toggle.
   document.addEventListener("keydown", function (e) {
     const ae = document.activeElement;
-    if (ae && ae !== document.body) return;
+    if (ae && ae !== document.body && ae !== document.documentElement) return;
     // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
     // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
     const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
