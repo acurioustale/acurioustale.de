@@ -13,12 +13,15 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Versions pinned in .github/workflows/deploy.yml. Asserted here (only when the
-# tool is present) so a drifted local tool is caught before it surfaces as a
-# mystery formatting failure in CI. Keep these in sync with deploy.yml.
-PRETTIER_VERSION="3.8.3"
-SHFMT_VERSION="3.13.1"
-ACTIONLINT_VERSION="1.7.12"
+# Versions pinned in .tool-versions. Asserted here (only when the tool is
+# present) so a drifted local tool is caught before it surfaces as a mystery
+# formatting failure in CI. .tool-versions is the single source of truth.
+tool_version() {
+	grep "^$1 " .tool-versions | awk '{print $2}'
+}
+PRETTIER_VERSION="$(tool_version prettier)"
+SHFMT_VERSION="$(tool_version shfmt)"
+ACTIONLINT_VERSION="$(tool_version actionlint)"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 skip() { echo "note: $1 not installed - skipping $2 (CI enforces it)." >&2; }
@@ -31,15 +34,16 @@ require_version() {
 	*"$want"*) ;;
 	*)
 		echo "  $name version mismatch: want $want, got: $got" >&2
-		echo "  install the pinned version (see deploy.yml) so local matches CI" >&2
+		echo "  install the pinned version (see .tool-versions) so local matches CI" >&2
 		exit 1
 		;;
 	esac
 }
 
-# CI pins Node 22. Warn (don't block) on a mismatch: a different engine can pass
-# here yet behave differently in CI.
-ci_node_major=22
+# CI pins Node via .tool-versions. Warn (don't block) on a mismatch: a different
+# engine can pass here yet behave differently in CI.
+ci_node_version="$(tool_version nodejs)"
+ci_node_major="${ci_node_version%%.*}"
 local_node_major="$(node -v | sed 's/^v//; s/\..*//')"
 if [[ "$local_node_major" != "$ci_node_major" ]]; then
 	echo "warning: local Node is v$local_node_major, CI uses v$ci_node_major." >&2

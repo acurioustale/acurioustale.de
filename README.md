@@ -62,7 +62,7 @@ npm install                                             # one-time (ESLint, styl
 `validate.sh` skips any of the brew-installed CLIs that aren't present (with a
 notice — CI always enforces them), so it stays runnable on a fresh checkout;
 Node and npm are the only hard requirements. When a pinned tool (Prettier, shfmt,
-actionlint) _is_ present, it asserts the version matches the one in `deploy.yml`,
+actionlint) _is_ present, it asserts the version matches the one in `.tool-versions`,
 so a drifted local tool is caught before it surfaces as a mystery CI reformat.
 
 Links are checked separately (they need the network and external hosts flake, so

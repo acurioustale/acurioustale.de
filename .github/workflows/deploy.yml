@@ -63,7 +63,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: ".tool-versions"
           cache: npm
 
       - name: Install npm tooling
@@ -71,15 +71,18 @@ jobs:
 
       # Pinned to the version run locally so CI and developers agree on style.
       - name: Check formatting (Prettier)
-        run: npx prettier@3.8.3 --check .
+        run: |
+          PRETTIER_VERSION=$(grep "^prettier " .tool-versions | awk '{print $2}')
+          npx prettier@"$PRETTIER_VERSION" --check .
 
       # shellcheck is preinstalled on ubuntu-latest; shfmt we fetch as a pinned
       # static binary so CI matches what developers run locally.
       - name: Lint and format-check shell scripts
         run: |
           shellcheck deploy.sh validate.sh
+          SHFMT_VERSION=$(grep "^shfmt " .tool-versions | awk '{print $2}')
           curl -sSL -o "$RUNNER_TEMP/shfmt" \
-            https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_amd64
+            https://github.com/mvdan/sh/releases/download/v"$SHFMT_VERSION"/shfmt_v"$SHFMT_VERSION"_linux_amd64
           chmod +x "$RUNNER_TEMP/shfmt"
           "$RUNNER_TEMP/shfmt" -d deploy.sh validate.sh
 
@@ -87,8 +90,9 @@ jobs:
       # embedded run scripts. Pinned static binary, no repo dependencies.
       - name: Lint workflows (actionlint)
         run: |
+          ACTIONLINT_VERSION=$(grep "^actionlint " .tool-versions | awk '{print $2}')
           curl -sSL -o "$RUNNER_TEMP/actionlint.tar.gz" \
-            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+            https://github.com/rhysd/actionlint/releases/download/v"$ACTIONLINT_VERSION"/actionlint_"$ACTIONLINT_VERSION"_linux_amd64.tar.gz
           tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
@@ -161,7 +165,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: ".tool-versions"
 
       - name: Deploy
         run: ./deploy.sh ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
