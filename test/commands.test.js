@@ -138,10 +138,13 @@ const commandsSource = readFileSync(
   "utf8",
 );
 
-// Commands terminal.js dispatches on: every `cmd === "..."` literal.
-// Plus commands commands.js handles directly: every `argv[0] === "..."` literal.
+// Commands terminal.js dispatches on: every `cmd === "..."` literal, plus the
+// keys of the BLOCKS map (commands that replay a static block, written as
+// `"cmd": ".selector"`). Plus commands commands.js handles directly: every
+// `argv[0] === "..."` literal.
 const dispatched = new Set([
   ...[...terminalSource.matchAll(/cmd === "([^"]+)"/g)].map((m) => m[1]),
+  ...[...terminalSource.matchAll(/"([^"]+)":\s*"\.[\w-]+"/g)].map((m) => m[1]),
   ...[...commandsSource.matchAll(/argv\[0\] === "([^"]+)"/g)].map((m) => m[1]),
 ]);
 
@@ -154,9 +157,8 @@ const advertised = help()
   .filter(Boolean);
 
 // Commands terminal.js accepts but help() intentionally omits: the filesystem
-// entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects/`),
-// and the trailing-slash-less `ls projects` alias.
-const ALIASES = new Set(["ls projects", "ls projects/", "./whoami.sh"]);
+// entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects`).
+const ALIASES = new Set(["ls projects", "./whoami.sh"]);
 
 test("every command help() lists is actually dispatched by terminal.js", () => {
   for (const cmd of advertised) {

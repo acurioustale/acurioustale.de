@@ -134,6 +134,15 @@ if (
     log.appendChild(out);
   }
 
+  // Commands that replay a static block, keyed by the canonical command and
+  // mapped to the selector they reprint. A trailing slash on the path is
+  // ignored (so `ls projects` and `ls projects/` are one command); to support
+  // another listable block, add a row here rather than another branch.
+  const BLOCKS = {
+    "./whoami.sh": ".whoami",
+    "ls projects": ".projects",
+  };
+
   function run() {
     const raw = input.value;
     const cmd = raw.trim();
@@ -154,10 +163,9 @@ if (
 
     // Commands that produce real output replay the matching static block;
     // help lists them; everything else is denied with reply()'s flavour.
-    if (cmd === "./whoami.sh") {
-      echoBlock(".whoami");
-    } else if (cmd === "ls projects/" || cmd === "ls projects") {
-      echoBlock(".projects");
+    const blockSelector = BLOCKS[cmd.replace(/\/+$/, "")];
+    if (blockSelector) {
+      echoBlock(blockSelector);
     } else if (cmd === "help") {
       helpBlock();
     } else {
