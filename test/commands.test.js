@@ -105,6 +105,11 @@ test("anything else is command not found", () => {
   assert.equal(reply("vim foo"), "bash: vim: command not found");
 });
 
+test("empty command returns empty string", () => {
+  assert.equal(reply(""), "");
+  assert.equal(reply("   "), "");
+});
+
 // help() must list every command that terminal.js actually handles, so the
 // listing can't drift out of sync with what the prompt accepts.
 test("help lists each advertised command", () => {

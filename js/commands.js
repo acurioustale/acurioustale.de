@@ -56,6 +56,7 @@ const PRIV = ["su", "doas", "chmod", "chown"];
 
 export function reply(cmd) {
   const cleanCmd = cmd.trim();
+  if (!cleanCmd) return "";
   const argv = cleanCmd.split(/\s+/);
   if (PRIV.includes(argv[0])) return argv[0] + ": permission denied";
   if (argv[0] === "sudo") {
