@@ -19,13 +19,14 @@ const htaccess = await readFile(
   "utf8",
 );
 
-// The <meta> CSP. The attribute is quoted with one quote char and its value
-// contains the other (the source-list keywords are single-quoted), so match on
-// the opening quote via a backreference rather than a "neither quote" class,
-// which would truncate at the first inner quote.
-const metaCsp = html.match(
-  /http-equiv=["']Content-Security-Policy["']\s+content=(["'])([\s\S]*?)\1/i,
-)?.[2];
+// The <meta> CSP. Matches attribute regardless of order between http-equiv and content.
+let metaCsp;
+for (const [tag] of html.matchAll(
+  /<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi,
+)) {
+  const match = tag.match(/content=(["'])([\s\S]*?)\1/i);
+  if (match) metaCsp = match[2];
+}
 
 // The header CSP: Header always set Content-Security-Policy "...".
 const headerCsp = htaccess.match(/Content-Security-Policy\s+"([^"]*)"/i)?.[1];
