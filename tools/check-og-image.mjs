@@ -25,22 +25,20 @@ try {
 const SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 if (bytesRead < 24 || !buf.subarray(0, 8).equals(SIGNATURE)) {
   console.error("check-og-image: assets/og-image.png is not a valid PNG");
-  process.exit(1);
-}
-
-if (buf.subarray(12, 16).toString("ascii") !== "IHDR") {
+  process.exitCode = 1;
+} else if (buf.subarray(12, 16).toString("ascii") !== "IHDR") {
   console.error("check-og-image: assets/og-image.png missing IHDR chunk");
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  const width = buf.readUInt32BE(16);
+  const height = buf.readUInt32BE(20);
+
+  if (width !== EXPECTED.width || height !== EXPECTED.height) {
+    console.error(
+      `check-og-image: assets/og-image.png is ${width}x${height}, expected ${EXPECTED.width}x${EXPECTED.height}`,
+    );
+    process.exitCode = 1;
+  } else {
+    console.log(`check-og-image: assets/og-image.png is ${width}x${height}`);
+  }
 }
-
-const width = buf.readUInt32BE(16);
-const height = buf.readUInt32BE(20);
-
-if (width !== EXPECTED.width || height !== EXPECTED.height) {
-  console.error(
-    `check-og-image: assets/og-image.png is ${width}x${height}, expected ${EXPECTED.width}x${EXPECTED.height}`,
-  );
-  process.exit(1);
-}
-
-console.log(`check-og-image: assets/og-image.png is ${width}x${height}`);
