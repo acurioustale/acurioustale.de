@@ -3,28 +3,39 @@
 # xmllint (sitemap.xml well-formedness), Prettier formatting, ShellCheck + shfmt,
 # actionlint, ESLint (JS + JSON) + stylelint (CSS) + markdownlint, the unit tests
 # (node --test), the CSP and og-image guards, and svgo (SVG optimisation).
-# Usage: ./validate.sh
+# Usage: ./validate.sh [--clean]
+#   --clean   reinstall dependencies with `npm ci` first, matching CI's clean
+#             install. Omit it to reuse the existing node_modules (faster); pass
+#             it when package-lock.json changed or a dependency issue is suspected.
 #
 # Node + npm are required (the repo's own tooling, tests and guards run on them).
 # The other CLIs are optional: each is skipped with a notice when absent so this
 # stays runnable everywhere, while CI pins and always enforces them. Install them
-# with: brew install vnu prettier shellcheck shfmt actionlint, plus `npm install`.
+# with: brew install vnu shellcheck shfmt actionlint, plus `npm install`.
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
+do_clean=0
+case "${1:-}" in
+"") ;;
+--clean) do_clean=1 ;;
+*)
+	echo "usage: ./validate.sh [--clean]" >&2
+	exit 2
+	;;
+esac
+
 # Versions pinned in .tool-versions. Asserted here (only when the tool is
 # present) so a drifted local tool is caught before it surfaces as a mystery
-# formatting failure in CI. .tool-versions is the single source of truth.
-tool_version() {
-	grep "^$1 " .tool-versions | awk '{print $2}'
-}
-PRETTIER_VERSION="$(tool_version prettier)"
-SHFMT_VERSION="$(tool_version shfmt)"
-ACTIONLINT_VERSION="$(tool_version actionlint)"
+# failure in CI. .tool-versions is the single source of truth.
+ci_node_version="$(awk '/^nodejs / {print $2}' .tool-versions)"
+SHFMT_VERSION="$(awk '/^shfmt / {print $2}' .tool-versions)"
+ACTIONLINT_VERSION="$(awk '/^actionlint / {print $2}' .tool-versions)"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 skip() { echo "note: $1 not installed - skipping $2 (CI enforces it)." >&2; }
+step() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 
 # Assert a tool reports the pinned version; the needle is matched literally so
 # the surrounding "v"/extra output in --version lines doesn't matter.
@@ -42,33 +53,37 @@ require_version() {
 
 # CI pins Node via .tool-versions. Warn (don't block) on a mismatch: a different
 # engine can pass here yet behave differently in CI.
-ci_node_version="$(tool_version nodejs)"
 ci_node_major="${ci_node_version%%.*}"
 local_node_major="$(node -v | sed 's/^v//; s/\..*//')"
 if [[ "$local_node_major" != "$ci_node_major" ]]; then
 	echo "warning: local Node is v$local_node_major, CI uses v$ci_node_major." >&2
 fi
 
-# Select files by extension, exactly like the CI job — prune .git and
-# node_modules, and never hand vnu the assets/ dir (it parses PNGs as text).
-readarray -d '' files < <(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
-	\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print0)
+if [[ "$do_clean" -eq 1 ]]; then
+	step "Install (npm ci)"
+	npm ci
+fi
 
 if have vnu; then
-	echo "==> Validating HTML, CSS and SVG (vnu)"
+	step "Validating HTML, CSS and SVG (vnu)"
+	# Select files by extension, exactly like the CI job — prune .git and
+	# node_modules, and never hand vnu the assets/ dir (it parses PNGs as text).
+	files=$(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
+		\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
 	# Filter two benign infos. "Trailing slash on void elements": Prettier adds
 	# `/>` as house style and vnu notes (info level) it's a no-op. "Content
 	# Security Policy": vnu checks the page over file://, where script-src 'self'
 	# resolves to a null origin and so appears to block the same-origin js/
 	# modules; over https the policy allows them (verified in-browser).
+	# shellcheck disable=SC2086
 	vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
-		--also-check-css --also-check-svg "${files[@]}"
+		--also-check-css --also-check-svg $files
 else
 	skip vnu "HTML/CSS/SVG validation"
 fi
 
 if have xmllint; then
-	echo "==> Checking XML well-formedness (xmllint)"
+	step "Checking XML well-formedness (xmllint)"
 	# vnu only covers the SVG XML; sitemap.xml is otherwise unchecked. Plain
 	# --noout (well-formedness, no network) keeps this gating; full schema
 	# validation needs the sitemaps.org XSD and is left out like link checking.
@@ -77,50 +92,39 @@ else
 	skip xmllint "sitemap XML check"
 fi
 
-if have prettier; then
-	require_version prettier "$PRETTIER_VERSION" "$(prettier --version)"
-	echo "==> Checking formatting (prettier)"
-	prettier --check .
-else
-	skip prettier "formatting check"
-fi
-
-if have shellcheck; then
-	echo "==> Linting shell scripts (shellcheck)"
-	shellcheck deploy.sh validate.sh
-else
-	skip shellcheck "shell lint"
-fi
-
-if have shfmt; then
+if have shellcheck && have shfmt; then
+	step "Shell scripts (shellcheck + shfmt)"
 	require_version shfmt "$SHFMT_VERSION" "$(shfmt --version)"
-	echo "==> Checking shell formatting (shfmt)"
-	shfmt -d deploy.sh validate.sh
+	shellcheck ./*.sh
+	shfmt -d ./*.sh
 else
-	skip shfmt "shell format check"
+	skip shellcheck/shfmt "shell checks"
 fi
 
 if have actionlint; then
+	step "Linting workflows (actionlint)"
 	require_version actionlint "$ACTIONLINT_VERSION" "$(actionlint --version | head -1)"
-	echo "==> Linting workflows (actionlint)"
 	actionlint
 else
 	skip actionlint "workflow lint"
 fi
 
-echo "==> Linting JS, CSS and Markdown (eslint, stylelint, markdownlint-cli2)"
+step "Format (Prettier)"
+npm run --silent format:check
+
+step "Linting JS, CSS and Markdown (eslint, stylelint, markdownlint-cli2)"
 npm run --silent lint
 
-echo "==> Running unit tests (node --test)"
+step "Running unit tests (node --test)"
 npm test --silent
 
-echo "==> Checking the CSP covers the inline scripts"
+step "Checking the CSP covers the inline scripts"
 npm run --silent check:csp
 
-echo "==> Checking the og-image dimensions"
+step "Checking the og-image dimensions"
 npm run --silent check:og
 
-echo "==> Checking SVG optimisation (svgo)"
+step "Checking SVG optimisation (svgo)"
 # Run svgo into a temp file so a svgo crash (bad fetch, config error) is
 # distinguished from a genuinely unoptimised SVG, instead of pipefail turning
 # both into the same misleading "not optimised" message.
@@ -137,4 +141,4 @@ for f in assets/favicon.svg og-image.src.svg; do
 	fi
 done
 
-echo "==> All checks passed"
+step "All checks passed"
