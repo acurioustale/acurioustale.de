@@ -52,4 +52,4 @@ for arg in "$@"; do
 	esac
 done
 
-rsync -avz --delete "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
+rsync -avz --delete "${rsync_args[@]:-}" "$stage"/ "${REMOTE}:${TARGET}"
