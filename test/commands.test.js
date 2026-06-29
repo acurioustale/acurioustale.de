@@ -84,15 +84,16 @@ test("echo echoes back arguments", () => {
   assert.equal(reply("echo"), "");
 });
 
-test("a path-like command reports no such file, naming the last token", () => {
-  assert.equal(
-    reply("cat /etc/passwd"),
-    "bash: /etc/passwd: No such file or directory",
-  );
+test("a path-like command reports no such file, naming the executable path", () => {
   assert.equal(reply("./run.sh"), "bash: ./run.sh: No such file or directory");
+  assert.equal(
+    reply("/usr/bin/custom"),
+    "bash: /usr/bin/custom: No such file or directory",
+  );
 });
 
 test("anything else is command not found", () => {
+  assert.equal(reply("cat /etc/passwd"), "bash: cat: command not found");
   assert.equal(reply("whoami"), "bash: whoami: command not found");
   assert.equal(reply("vim foo"), "bash: vim: command not found");
 });
