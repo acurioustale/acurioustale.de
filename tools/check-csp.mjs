@@ -43,31 +43,37 @@ for (const { name, csp } of policies) {
     console.error(`check-csp: no Content-Security-Policy found in ${name}`);
   }
 }
-if (failed) process.exit(1);
+if (failed) {
+  process.exitCode = 1;
+} else {
+  // Every inline <script> in index.html (external scripts are covered by
+  // script-src 'self' and carry no inline body to hash).
+  const scripts = inlineScripts(html);
 
-// Every inline <script> in index.html (external scripts are covered by
-// script-src 'self' and carry no inline body to hash).
-const scripts = inlineScripts(html);
+  for (const { attrs, body } of scripts) {
+    const type = (attrs.match(/\btype=["']([^"']*)["']/i) || [])[1];
+    // Non-JS data blocks (e.g. application/ld+json) are not executed and so are
+    // not subject to script-src; only real inline scripts need a hash.
+    const isJs =
+      !type ||
+      /^(module|text\/javascript|application\/javascript)$/i.test(type);
+    if (!isJs) continue;
 
-for (const { attrs, body } of scripts) {
-  const type = (attrs.match(/\btype=["']([^"']*)["']/i) || [])[1];
-  // Non-JS data blocks (e.g. application/ld+json) are not executed and so are
-  // not subject to script-src; only real inline scripts need a hash.
-  const isJs =
-    !type || /^(module|text\/javascript|application\/javascript)$/i.test(type);
-  if (!isJs) continue;
-
-  const hash = createHash("sha256").update(body, "utf8").digest("base64");
-  const token = `'sha256-${hash}'`;
-  for (const { name, csp } of policies) {
-    if (!csp.includes(token)) {
-      failed = true;
-      console.error(
-        `check-csp: inline script not allowed by the ${name}.\n  expected token: ${token}`,
-      );
+    const hash = createHash("sha256").update(body, "utf8").digest("base64");
+    const token = `'sha256-${hash}'`;
+    for (const { name, csp } of policies) {
+      if (!csp.includes(token)) {
+        failed = true;
+        console.error(
+          `check-csp: inline script not allowed by the ${name}.\n  expected token: ${token}`,
+        );
+      }
     }
   }
-}
 
-if (failed) process.exit(1);
-console.log("check-csp: all inline scripts are covered by both CSPs");
+  if (failed) {
+    process.exitCode = 1;
+  } else {
+    console.log("check-csp: all inline scripts are covered by both CSPs");
+  }
+}
