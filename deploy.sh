@@ -41,4 +41,15 @@ node -e '
 	fs.writeFileSync(file, after);
 ' "$stage/js/commands.js"
 
-rsync -avz --delete "$@" "$stage"/ "${REMOTE}:${TARGET}"
+rsync_args=()
+for arg in "$@"; do
+	case "$arg" in
+	--dry-run) rsync_args+=("--dry-run") ;;
+	*)
+		echo "Usage: ./deploy.sh [--dry-run]" >&2
+		exit 1
+		;;
+	esac
+done
+
+rsync -avz --delete "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
