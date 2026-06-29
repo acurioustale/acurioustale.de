@@ -39,17 +39,15 @@ jobs:
         run: |
           curl -sSfL -o "$RUNNER_TEMP/vnu.jar" \
             https://github.com/validator/validator/releases/download/latest/vnu.jar
-          files=$(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
-            \( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print)
           # Filter two benign infos: the void-element trailing slash (Prettier
           # house style) and the CSP meta check, a file:// false positive where
           # script-src 'self' can't match the same-origin js/ modules (served
           # over https it allows them; verified in-browser, no violations).
-          # $files is intentionally unquoted so each path is a separate argument.
-          # shellcheck disable=SC2086
-          java -jar "$RUNNER_TEMP/vnu.jar" \
-            --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
-            --also-check-css --also-check-svg $files
+          find . \( -path ./.git -o -path ./node_modules \) -prune -o \
+            \( -name '*.html' -o -name '*.css' -o -name '*.svg' \) \
+            -exec java -jar "$RUNNER_TEMP/vnu.jar" \
+              --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
+              --also-check-css --also-check-svg {} +
 
       # vnu only covers the SVG XML; sitemap.xml is otherwise unchecked. Plain
       # --noout is well-formedness only (no network). xmllint ships in
