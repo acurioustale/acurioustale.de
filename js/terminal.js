@@ -164,8 +164,11 @@ if (
 
   function run() {
     const raw = input.value;
-    const cmd = raw.trim();
-    if (!cmd) return;
+    const rawCmd = raw.trim();
+    if (!rawCmd) return;
+
+    // Normalize internal consecutive whitespace to a single space for matching.
+    const cmd = rawCmd.replace(/\s+/g, " ");
 
     // clear empties the screen: wipe the scrollback and hide the boot output,
     // leaving just the prompt, like a real terminal. Re-running a command
@@ -188,7 +191,7 @@ if (
     } else if (cmd === "help") {
       helpBlock();
     } else {
-      replyLine(reply(cmd));
+      replyLine(reply(rawCmd));
     }
 
     input.value = "";
