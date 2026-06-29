@@ -190,7 +190,11 @@ if (
   document.addEventListener("keydown", function (e) {
     const ae = document.activeElement;
     if (ae && ae !== document.body) return;
-    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
+    // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
+    const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
+    if (e.metaKey || ((e.ctrlKey || e.altKey) && !altGraph)) return;
+    if (e.key.length !== 1) return;
     input.focus({ preventScroll: true });
   });
 
