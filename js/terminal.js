@@ -79,8 +79,8 @@ if (
   // exceeds the terminal's max-width).
   let lastWidth = screen.getBoundingClientRect().width;
   if (window.ResizeObserver) {
-    const ro = new ResizeObserver(function () {
-      const newWidth = screen.getBoundingClientRect().width;
+    const ro = new ResizeObserver(function (entries) {
+      const newWidth = entries[0].contentRect.width;
       if (newWidth !== lastWidth) {
         lastWidth = newWidth;
         fitScreen();
