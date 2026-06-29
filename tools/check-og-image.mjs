@@ -21,6 +21,11 @@ if (buf.length < 24 || !buf.subarray(0, 8).equals(SIGNATURE)) {
   process.exit(1);
 }
 
+if (buf.subarray(12, 16).toString("ascii") !== "IHDR") {
+  console.error("check-og-image: assets/og-image.png missing IHDR chunk");
+  process.exit(1);
+}
+
 const width = buf.readUInt32BE(16);
 const height = buf.readUInt32BE(20);
 
