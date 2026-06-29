@@ -49,16 +49,16 @@ export function formatUptime(ms) {
 // like ls, anything else where the command name is a path → no such file,
 // otherwise command not found.
 
-// An array, not an object-as-set: a plain object would match inherited
+// A Set, not a plain object: a plain object would match inherited
 // Object.prototype members (toString, constructor, …) as commands. Kept at
-// module scope to avoid reallocating the array on every command execution.
-const PRIV = ["su", "doas", "chmod", "chown"];
+// module scope to avoid reallocating the Set on every command execution.
+const PRIV = new Set(["su", "doas", "chmod", "chown"]);
 
 export function reply(cmd) {
   const cleanCmd = cmd.trim();
   if (!cleanCmd) return "";
   const argv = cleanCmd.split(/\s+/);
-  if (PRIV.includes(argv[0])) return argv[0] + ": permission denied";
+  if (PRIV.has(argv[0])) return argv[0] + ": permission denied";
   if (argv[0] === "sudo") {
     return [
       "We trust you have received the usual lecture from the local System",
