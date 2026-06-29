@@ -245,21 +245,26 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     input.focus();
   });
 
-  // Type anywhere to focus the prompt — the first keystroke lands in the
+  // Type within the terminal to focus the prompt — the first keystroke lands in the
   // field with no click needed, and refocuses it if focus drifted away.
   // Ignore shortcuts and non-text keys so browser combos still work, and
   // never steal focus from a real control: a button activates on Space's
   // keyup, so grabbing focus on keydown would swallow the theme toggle.
-  document.addEventListener("keydown", function (e) {
-    const ae = document.activeElement;
-    if (ae && ae !== document.body && ae !== document.documentElement) return;
-    // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
-    // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
-    const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
-    if (e.metaKey || ((e.ctrlKey || e.altKey) && !altGraph)) return;
-    if (e.key.length !== 1) return;
-    input.focus({ preventScroll: true });
-  });
+  // Scoped to the terminal container to prevent trapping screen reader users
+  // who rely on single-key document navigation shortcuts.
+  const terminalNode = document.querySelector(".terminal");
+  if (terminalNode) {
+    terminalNode.addEventListener("keydown", function (e) {
+      const ae = document.activeElement;
+      if (ae && ae !== document.body && ae !== document.documentElement) return;
+      // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
+      // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
+      const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
+      if (e.metaKey || ((e.ctrlKey || e.altKey) && !altGraph)) return;
+      if (e.key.length !== 1) return;
+      input.focus({ preventScroll: true });
+    });
+  }
 
   // Focus on load so typing works right away.
   input.focus({ preventScroll: true });
