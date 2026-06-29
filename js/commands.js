@@ -40,7 +40,7 @@ export function formatUptime(ms) {
   if (hours === 0) {
     return `up ${dayPrefix}${mins} min`;
   }
-  return `up ${dayPrefix}${hours}:${mins < 10 ? "0" + mins : mins}`;
+  return `up ${dayPrefix}${hours}:${String(mins).padStart(2, "0")}`;
 }
 
 // Handle the commands terminal.js doesn't render as a block. A few produce real
