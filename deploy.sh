@@ -50,8 +50,20 @@ for arg in "$@"; do
 	esac
 done
 
+# Local cruft that can ride along inside the copied css/js/assets directories
+# but must never reach the web root: macOS metadata and AppleDouble forks
+# (common on mounted volumes), plus editor backups and swapfiles. Defined once
+# and reused so the two rsync invocations below can't drift apart.
+rsync_excludes=(
+	--exclude='.DS_Store'
+	--exclude='._*'
+	--exclude='*.bak'
+	--exclude='*.swp'
+	--exclude='*~'
+)
+
 if [[ "${#rsync_args[@]}" -gt 0 ]]; then
-	rsync -avz --delete --exclude='.DS_Store' --exclude='*.bak' --chmod=D755,F644 "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
+	rsync -avz --delete "${rsync_excludes[@]}" --chmod=D755,F644 "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
 else
-	rsync -avz --delete --exclude='.DS_Store' --exclude='*.bak' --chmod=D755,F644 "$stage"/ "${REMOTE}:${TARGET}"
+	rsync -avz --delete "${rsync_excludes[@]}" --chmod=D755,F644 "$stage"/ "${REMOTE}:${TARGET}"
 fi
