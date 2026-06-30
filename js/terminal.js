@@ -165,6 +165,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
   const BLOCKS = Object.assign(Object.create(null), STATIC_BLOCKS);
 
+  const MAX_HISTORY = 100;
   const history = [];
   let historyIndex = 0;
   let currentBuffer = "";
@@ -182,7 +183,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
     if (history[history.length - 1] !== raw) {
       history.push(raw);
-      if (history.length > 100) {
+      if (history.length > MAX_HISTORY) {
         history.shift();
       }
     }
@@ -217,7 +218,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     }
 
     // Cap scrollback growth so long sessions don't bloat the DOM.
-    while (log.children.length > 100) {
+    while (log.children.length > MAX_HISTORY) {
       log.removeChild(log.firstElementChild);
     }
 
