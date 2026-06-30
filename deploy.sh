@@ -20,7 +20,8 @@ TARGET="html/acurioustale.de/"
 # on the host forever. Syncing a directory that holds only the deploy set lets
 # --delete remove anything no longer shipped. TARGET is unchanged, so the
 # server-side rsync jail still matches.
-cp -R index.html .htaccess robots.txt sitemap.xml humans.txt css js assets "$stage"/
+DEPLOY_ASSETS=(index.html .htaccess robots.txt sitemap.xml humans.txt css js assets)
+cp -R "${DEPLOY_ASSETS[@]}" "$stage"/
 
 # Stamp the deploy time directly into the staged js/commands.js so the live
 # site's `uptime` counts from this deploy. Stamping the staged copy leaves the
