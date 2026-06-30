@@ -3,6 +3,13 @@
 # comparebuilds.app); this adds the production security headers the static
 # files can't set themselves.
 
+# ─── HTTPS Redirect ────────────────────────────────────────────────────────────
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
 # ─── Security headers ──────────────────────────────────────────────────────────
 <IfModule mod_headers.c>
   # Content-Security-Policy. Everything is same-origin: the stylesheet and the
@@ -22,6 +29,10 @@
   Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "no-referrer"
   Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Embedder-Policy "require-corp"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+  Header always unset Server
 
   # Long-cache the static images: the favicon, apple-touch icon and OG card are
   # stable (changed only by an explicit redeploy). Markup, CSS and JS use no-cache
@@ -40,6 +51,14 @@
 # doesn't map it by default.
 <IfModule mod_mime.c>
   AddType image/svg+xml .svg
+</IfModule>
+
+# ─── Compression ───────────────────────────────────────────────────────────────
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml
 </IfModule>
 
 # ─── Deny sensitive files (defense in depth) ───────────────────────────────────
