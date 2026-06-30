@@ -36,7 +36,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   input.maxLength = 1000;
   input.setAttribute("aria-label", "Terminal — type a command");
   input.autocomplete = "off";
-  input.autocapitalize = "off";
+  input.autocapitalize = "none";
   input.spellcheck = false;
   input.inputMode = "none";
   last.insertBefore(input, cursor);
