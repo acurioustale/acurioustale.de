@@ -148,7 +148,10 @@ editing:
 
 - **Edit the inline `<head>` script and its hash changes.** `tools/check-csp.mjs`
   recomputes the sha256 of every inline script and fails the build if it isn't in
-  **both** policies, so CI catches a stale hash. Run `npm run check:csp`, copy the
+  **both** policies, so CI catches a stale hash. It also verifies the two policies
+  agree on every other directive — the header may add only `frame-ancestors` and
+  `upgrade-insecure-requests`, the rest must match — so loosening or dropping a
+  directive in just one file is caught too. Run `npm run check:csp`, copy the
   `expected token` it prints into the `script-src` list in **both `index.html` and
   `.htaccess`**, and re-run. New external scripts under `js/` need no hash (covered
   by `'self'`); a `<script>` of a non-JS type like `application/ld+json` is data,
