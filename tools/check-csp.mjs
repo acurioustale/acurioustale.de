@@ -28,8 +28,23 @@ for (const [tag] of html.matchAll(
   if (match) metaCsp = match[2];
 }
 
-// The header CSP: Header always set Content-Security-Policy "...".
-const headerCsp = htaccess.match(/Content-Security-Policy\s+"([^"]*)"/i)?.[1];
+// The header CSP: the `Header [always] set Content-Security-Policy "..."`
+// directive in .htaccess. Scan line by line and skip Apache comments so a
+// commented-out example can't be captured instead of the live directive, and
+// require the `Header set` form so only a real directive matches (a bare
+// "Content-Security-Policy" mention in prose never does).
+let headerCsp;
+for (const rawLine of htaccess.split("\n")) {
+  const line = rawLine.trim();
+  if (line.startsWith("#")) continue;
+  const match = line.match(
+    /^Header\s+(?:always\s+)?set\s+Content-Security-Policy\s+"([^"]*)"/i,
+  );
+  if (match) {
+    headerCsp = match[1];
+    break;
+  }
+}
 
 const policies = [
   { name: "index.html <meta> CSP", csp: metaCsp },
