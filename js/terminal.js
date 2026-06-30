@@ -161,6 +161,9 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
     if (history[history.length - 1] !== raw) {
       history.push(raw);
+      if (history.length > 100) {
+        history.shift();
+      }
     }
     historyIndex = history.length;
     currentBuffer = "";

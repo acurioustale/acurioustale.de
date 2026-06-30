@@ -324,8 +324,9 @@ a:focus-visible {
   width: 0;
 
   /* Cap growth at the screen width so a very long line scrolls inside the
-     field instead of forcing a horizontal scrollbar on .screen. */
-  max-width: 100%;
+     field instead of forcing a horizontal scrollbar on .screen.
+     Using calc to leave room for the prompt and cursor so they don't wrap. */
+  max-width: calc(100% - 40px);
   margin: 0;
   padding: 0;
   border: 0;
