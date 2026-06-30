@@ -135,25 +135,52 @@ test("Object.prototype member names are command not found, not privileged", () =
 });
 
 import { ADVERTISED_COMMANDS, STATIC_BLOCKS } from "../js/commands.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-// terminal.js handles these two commands directly (in its `run` switch)
-const TERMINAL_HANDLED_COMMANDS = new Set(["clear", "help"]);
+// These cross-checks bind help()'s listing to the commands the code actually
+// dispatches, so the two can't drift. Rather than hand-maintain a list of those
+// commands (which silently goes stale the moment terminal.js gains a branch),
+// derive it from the source: the literals terminal.js special-cases in its run()
+// dispatch (cmd === "...") and the ones commands.js reply() produces real output
+// for (argv[0] === "..."). The privileged denials sit in a Set, matched with
+// .has() rather than an equality check, so they're correctly left out.
+const readSrc = (rel) =>
+  readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8");
 
-// The filesystem entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects`).
-// These are unadvertised commands handled directly by terminal.js via STATIC_BLOCKS.
+const literals = (src, re) => new Set([...src.matchAll(re)].map((m) => m[1]));
+
+const terminalHandled = literals(
+  readSrc("../js/terminal.js"),
+  /\bcmd === "([^"]+)"/g,
+);
+const replyHandled = literals(
+  readSrc("../js/commands.js"),
+  /argv\[0\] === "([^"]+)"/g,
+);
+
+// The filesystem entries you discover with `ls` and run directly (`./whoami.sh`,
+// `ls projects`) — unadvertised, handled by terminal.js via STATIC_BLOCKS.
 const ALIASES = new Set(Object.keys(STATIC_BLOCKS));
 
-// The union of commands dispatched between terminal.js and commands.js (except ALIASES)
-const dispatched = new Set([
-  ...TERMINAL_HANDLED_COMMANDS,
-  "ls",
-  "uptime",
-  "date",
-  "sudo",
-  "echo",
-]);
+// Every command dispatched across the two modules (aliases aside).
+const dispatched = new Set([...terminalHandled, ...replyHandled]);
 
 const advertised = Object.keys(ADVERTISED_COMMANDS);
+
+// Guard the derivation itself: if a refactor changes how the modules dispatch
+// so the regexes match nothing, the sets would be empty and the cross-checks
+// below would pass vacuously — fail loudly instead so the regex gets updated.
+test("the dispatch sets are derived from the modules and non-empty", () => {
+  assert.ok(
+    terminalHandled.size > 0,
+    'extracted no `cmd === "..."` from terminal.js - update the dispatch regex',
+  );
+  assert.ok(
+    replyHandled.size > 0,
+    'extracted no `argv[0] === "..."` from commands.js - update the dispatch regex',
+  );
+});
 
 test("every command help() lists is actually dispatched by terminal.js or commands.js", () => {
   for (const cmd of advertised) {
