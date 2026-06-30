@@ -51,7 +51,7 @@ for arg in "$@"; do
 done
 
 if [[ "${#rsync_args[@]}" -gt 0 ]]; then
-	rsync -avz --delete --chmod=D755,F644 "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
+	rsync -avz --delete --exclude='.DS_Store' --exclude='*.bak' --chmod=D755,F644 "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
 else
-	rsync -avz --delete --chmod=D755,F644 "$stage"/ "${REMOTE}:${TARGET}"
+	rsync -avz --delete --exclude='.DS_Store' --exclude='*.bak' --chmod=D755,F644 "$stage"/ "${REMOTE}:${TARGET}"
 fi
