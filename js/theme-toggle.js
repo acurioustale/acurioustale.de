@@ -32,8 +32,12 @@ if (bar) {
     if (to === "auto") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", to);
 
-    const lightMeta = document.querySelector('meta[name="theme-color"][content="#e8e6df"]');
-    const darkMeta = document.querySelector('meta[name="theme-color"][content="#0e0f10"]');
+    const lightMeta = document.querySelector(
+      'meta[name="theme-color"][content="#e8e6df"]',
+    );
+    const darkMeta = document.querySelector(
+      'meta[name="theme-color"][content="#0e0f10"]',
+    );
     if (lightMeta && darkMeta) {
       if (to === "auto") {
         lightMeta.setAttribute("media", "(prefers-color-scheme: light)");
