@@ -117,7 +117,7 @@ evaluating the inline scripts (via `tools/inline-scripts.mjs`).
 (A `<script type="application/ld+json">` block provides structured data for
 search engines; it's data, not executable, and needs no CSP hash.) Everything
 else is in `js/`, loaded with `type="module"`: `theme-toggle.js` (the toggle UI)
-and `terminal.js` (the interactive guest-shell easter egg, desktop only, unrelated
+and `terminal.js` (the interactive guest-shell easter egg, unrelated
 to theming). The card is dressed as a macOS Terminal session and the prompt accepts
 commands: `ls` lists the directory (`projects/` and `whoami.sh`), which you then
 run as in a real shell — `./whoami.sh` and `ls projects/` reprint the boot
