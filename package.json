@@ -13,6 +13,7 @@
     "lint:md": "markdownlint-cli2",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:md",
     "links": "lychee --config lychee.toml index.html README.md CLAUDE.md SECURITY.md",
+    "validate": "./validate.sh",
     "test": "node --test",
     "check:csp": "node tools/check-csp.mjs",
     "check:og": "node tools/check-og-image.mjs"
