@@ -31,6 +31,22 @@ if (bar) {
     } catch {}
     if (to === "auto") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", to);
+
+    const lightMeta = document.querySelector(
+      'meta[name="theme-color"][content="#e8e6df"]',
+    );
+    const darkMeta = document.querySelector(
+      'meta[name="theme-color"][content="#0e0f10"]',
+    );
+    if (lightMeta && darkMeta) {
+      if (to === "auto") {
+        lightMeta.setAttribute("media", "(prefers-color-scheme: light)");
+        darkMeta.setAttribute("media", "(prefers-color-scheme: dark)");
+      } else {
+        lightMeta.setAttribute("media", to === "light" ? "all" : "not all");
+        darkMeta.setAttribute("media", to === "dark" ? "all" : "not all");
+      }
+    }
   }
 
   const btn = document.createElement("button");
