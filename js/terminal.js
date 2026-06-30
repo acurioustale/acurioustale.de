@@ -91,7 +91,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   let lastWidth = screen.getBoundingClientRect().width;
   if (window.ResizeObserver) {
     const ro = new ResizeObserver(function (entries) {
-      const newWidth = entries[0].contentRect.width;
+      const newWidth = entries[0].target.getBoundingClientRect().width;
       if (newWidth !== lastWidth) {
         lastWidth = newWidth;
         fitScreen();
