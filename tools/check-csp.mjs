@@ -4,8 +4,10 @@
 // inline <script> (one with no src and no non-JS type) runs under script-src,
 // which forbids 'unsafe-inline', so each needs its sha256 hash in BOTH policies.
 // This recomputes the hashes from the live markup and fails if any is missing
-// from either policy — so neither can silently drift when the inline theme guard
-// is edited. Run from validate.sh and deploy.yml.
+// from either policy, and also checks the two policies stay in lock-step on
+// every other directive — so neither can silently drift, whether the inline
+// theme guard is edited or a directive is loosened in only one file. Run from
+// validate.sh and deploy.yml.
 //
 // Dependency-free on purpose: small regexes over our own well-formatted files,
 // not a general HTML/Apache parser.
@@ -51,6 +53,38 @@ const policies = [
   { name: ".htaccess header CSP", csp: headerCsp },
 ];
 
+// A CSP as a map of directive name -> set of values, so the two policies can be
+// compared directive by directive, order- and whitespace-insensitively.
+function parseCsp(csp) {
+  const directives = new Map();
+  for (const part of csp.split(";")) {
+    const [name, ...values] = part.trim().split(/\s+/).filter(Boolean);
+    if (name) directives.set(name.toLowerCase(), new Set(values));
+  }
+  return directives;
+}
+
+// Directives the .htaccess header carries that a <meta> CSP cannot express: the
+// header is allowed to add exactly these on top of the <meta> baseline.
+const HEADER_ONLY = new Set(["frame-ancestors", "upgrade-insecure-requests"]);
+
+// Human-readable list of directives that differ between two CSP maps (a
+// directive present in only one, or present in both with differing values).
+function directiveDiff(meta, header) {
+  const diffs = [];
+  for (const name of new Set([...meta.keys(), ...header.keys()])) {
+    const m = meta.get(name);
+    const h = header.get(name);
+    if (!m) diffs.push(`${name}: only in .htaccess`);
+    else if (!h) diffs.push(`${name}: only in <meta>`);
+    else if (m.size !== h.size || ![...m].every((v) => h.has(v)))
+      diffs.push(
+        `${name}: <meta> [${[...m].join(" ")}] vs .htaccess [${[...h].join(" ")}]`,
+      );
+  }
+  return diffs;
+}
+
 let failed = false;
 for (const { name, csp } of policies) {
   if (!csp) {
@@ -61,6 +95,23 @@ for (const { name, csp } of policies) {
 if (failed) {
   process.exitCode = 1;
 } else {
+  // The two policies must stay in lock-step: the header is the <meta> baseline
+  // plus the directives a meta CSP can't express. Strip those header-only
+  // directives, then the rest must match exactly, so loosening or dropping a
+  // directive in only one file is caught — not just a drifted script hash.
+  const headerBaseline = new Map(
+    [...parseCsp(headerCsp)].filter(([name]) => !HEADER_ONLY.has(name)),
+  );
+  const diffs = directiveDiff(parseCsp(metaCsp), headerBaseline);
+  if (diffs.length) {
+    failed = true;
+    console.error(
+      "check-csp: the <meta> and .htaccess CSPs disagree (header-only " +
+        "frame-ancestors/upgrade-insecure-requests excluded):",
+    );
+    for (const d of diffs) console.error(`  ${d}`);
+  }
+
   // Every inline <script> in index.html (external scripts are covered by
   // script-src 'self' and carry no inline body to hash).
   const scripts = inlineScripts(html);
@@ -89,6 +140,8 @@ if (failed) {
   if (failed) {
     process.exitCode = 1;
   } else {
-    console.log("check-csp: all inline scripts are covered by both CSPs");
+    console.log(
+      "check-csp: the two CSPs are consistent and cover all inline scripts",
+    );
   }
 }
