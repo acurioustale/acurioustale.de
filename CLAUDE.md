@@ -75,17 +75,22 @@ click on a light-mode OS). That cycle order is the pure function `nextTheme()` i
 by editing the toggle inline.
 
 - `css/style.css` sets `color-scheme: light dark` on `:root` and defines each
-  active `--*` token **once** as `--token: light-dark(<light>, <dark>)`. The
-  browser resolves each `light-dark()` to its light or dark value from the used
+  colour **once** as `--token: light-dark(<light>, <dark>)`. The browser
+  resolves each `light-dark()` to its light or dark value from the used
   `color-scheme`, so the OS preference drives the colours for free (this is what
   makes the no-JS path follow the OS). The explicit toggle does not re-map any
   colour — it only forces the scheme: `:root[data-theme="light"]` sets
   `color-scheme: light` and `:root[data-theme="dark"]` sets `color-scheme: dark`,
-  and every token follows. When adding or renaming a colour, add the one
-  `light-dark()` token; there are no separate palette vars or activation blocks
-  to keep in sync. (`light-dark()` is Baseline since mid-2024 — Chrome 123,
-  Firefox 120, Safari 17.5; pre-2024 browsers are intentionally out of scope and
-  there is no fallback.)
+  and every token follows. (`light-dark()` is Baseline since mid-2024 — Chrome
+  123, Firefox 120, Safari 17.5.)
+- Older browsers without `light-dark()` get a fallback that **duplicates** the
+  palette: the plain `:root` block carries the light values, and an
+  `@supports not (color: light-dark(...))` block carries the dark values
+  (applied both by `prefers-color-scheme: dark` and by the forced
+  `:root[data-theme="dark"]`). So when adding or renaming a colour, change the
+  `light-dark()` token **and** its fallback copies. `test/themeFallback.test.js`
+  binds every fallback value back to its `light-dark()` token, so a forgotten
+  copy fails the build rather than drifting silently.
 - The theme logic lives in two places. One small inline script in `<head>`
   applies a saved theme from `localStorage` before first paint to avoid a flash;
   it must stay inline (an external/deferred script would flash). `js/theme-toggle.js`

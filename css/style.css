@@ -1,11 +1,13 @@
 @charset "utf-8";
 
-/* Light/dark theming, single source of truth. `color-scheme: light dark` lets
-   light-dark() resolve each token to its light or dark value automatically:
-   from the OS preference by default (so the no-JS path follows the OS for free),
-   and forced one way by the toggle, which only flips color-scheme below. Each
-   token is written once as light-dark(<light>, <dark>) — no repeated activation
-   blocks, no separate named palette vars to keep in sync. */
+/* Light/dark theming. `color-scheme: light dark` lets light-dark() resolve each
+   token to its light or dark value automatically: from the OS preference by
+   default (so the no-JS path follows the OS for free), and forced one way by the
+   toggle, which only flips color-scheme below. Each colour is written once as
+   light-dark(<light>, <dark>); the plain :root values and the `@supports not`
+   block below are the fallback for browsers without light-dark() support and
+   duplicate those values. test/themeFallback.test.js keeps the fallback in sync
+   with the light-dark() tokens so the two can't drift. */
 :root {
   color-scheme: light dark;
 
