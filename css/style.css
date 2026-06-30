@@ -336,6 +336,13 @@ a:focus-visible {
   caret-color: transparent;
 }
 
+@supports (field-sizing: content) {
+  .cmd-input {
+    width: auto;
+    field-sizing: content;
+  }
+}
+
 .cmd-input:focus {
   outline: none;
 }

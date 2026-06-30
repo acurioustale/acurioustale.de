@@ -43,25 +43,29 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
   // Measure text using a hidden span to accurately account for the rendered
   // pixel width of emojis and complex characters, which String.length
-  // (UTF-16 code units) gets wrong.
-  const ghost = document.createElement("span");
-  ghost.className = "cmd-input";
-  ghost.style.position = "absolute";
-  ghost.style.visibility = "hidden";
-  ghost.style.whiteSpace = "pre";
-  ghost.style.width = "auto";
-  ghost.style.maxWidth = "none";
-  document.body.appendChild(ghost);
+  // (UTF-16 code units) gets wrong. We only need this if the browser doesn't
+  // natively support field-sizing: content.
+  let size = function () {};
+  if (typeof CSS === "undefined" || !CSS.supports("field-sizing", "content")) {
+    const ghost = document.createElement("span");
+    ghost.className = "cmd-input";
+    ghost.style.position = "absolute";
+    ghost.style.visibility = "hidden";
+    ghost.style.whiteSpace = "pre";
+    ghost.style.width = "auto";
+    ghost.style.maxWidth = "none";
+    document.body.appendChild(ghost);
 
-  // Grow the field with its content so the block cursor trails the text.
-  function size() {
-    ghost.textContent = input.value;
-    // Add 1px slack to prevent sub-pixel rounding from clipping the caret
-    input.style.width =
-      Math.ceil(ghost.getBoundingClientRect().width) + 1 + "px";
+    // Grow the field with its content so the block cursor trails the text.
+    size = function () {
+      ghost.textContent = input.value;
+      // Add 1px slack to prevent sub-pixel rounding from clipping the caret
+      input.style.width =
+        Math.ceil(ghost.getBoundingClientRect().width) + 1 + "px";
+    };
+    size();
+    input.addEventListener("input", size);
   }
-  size();
-  input.addEventListener("input", size);
 
   // Freeze the screen at its boot height so command history scrolls inside
   // the window instead of growing it. Measured with the scrollback hidden and
