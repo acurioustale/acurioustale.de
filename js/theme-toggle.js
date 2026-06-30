@@ -72,6 +72,10 @@ if (bar) {
   prefersLight.addEventListener("change", render);
 
   bar.appendChild(btn);
+  
+  if (mode() !== "auto") {
+    apply(mode());
+  }
   render();
 
   window.addEventListener("storage", function (e) {
