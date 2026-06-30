@@ -336,6 +336,16 @@ a:focus-visible {
   caret-color: transparent;
 }
 
+/* Modern browsers: let the engine size the input to its content natively,
+   avoiding the JS ghost-element reflow path entirely. The width: 0 / JS path
+   above remains the fallback for browsers that don't support field-sizing. */
+@supports (field-sizing: content) {
+  .cmd-input {
+    width: auto;
+    field-sizing: content;
+  }
+}
+
 .cmd-input:focus {
   outline: none;
 }

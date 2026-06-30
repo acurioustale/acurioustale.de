@@ -80,10 +80,17 @@ if have vnu; then
 	# modules; over https the policy allows them (verified in-browser).
 	# On bash 3.2 (the macOS default) "${files[@]}" on an empty array trips
 	# set -u, so guard the expansion and skip vnu when find matched nothing.
+	# Filter benign infos. "Trailing slash on void elements": Prettier adds
+	# `/>` as house style and vnu notes (info level) it's a no-op. "Content
+	# Security Policy": vnu checks the page over file://, where script-src 'self'
+	# resolves to a null origin and so appears to block the same-origin js/
+	# modules; over https the policy allows them (verified in-browser). CSS
+	# "field-sizing": vnu doesn't recognise this modern property yet; the
+	# @supports guard in style.css already makes it safe to use.
 	if [[ ${#files[@]} -eq 0 ]]; then
 		echo "  no HTML/CSS/SVG files found to validate" >&2
 	else
-		vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
+		vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy|field-sizing).*' \
 			--also-check-css --also-check-svg "${files[@]}"
 	fi
 else
