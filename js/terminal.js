@@ -41,9 +41,24 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   input.inputMode = "none";
   last.insertBefore(input, cursor);
 
+  // Measure text using a hidden span to accurately account for the rendered
+  // pixel width of emojis and complex characters, which String.length
+  // (UTF-16 code units) gets wrong.
+  const ghost = document.createElement("span");
+  ghost.className = "cmd-input";
+  ghost.style.position = "absolute";
+  ghost.style.visibility = "hidden";
+  ghost.style.whiteSpace = "pre";
+  ghost.style.width = "auto";
+  ghost.style.maxWidth = "none";
+  document.body.appendChild(ghost);
+
   // Grow the field with its content so the block cursor trails the text.
   function size() {
-    input.style.width = input.value.length + "ch";
+    ghost.textContent = input.value;
+    // Add 1px slack to prevent sub-pixel rounding from clipping the caret
+    input.style.width =
+      Math.ceil(ghost.getBoundingClientRect().width) + 1 + "px";
   }
   size();
   input.addEventListener("input", size);
@@ -161,6 +176,9 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
     if (history[history.length - 1] !== raw) {
       history.push(raw);
+      if (history.length > 100) {
+        history.shift();
+      }
     }
     historyIndex = history.length;
     currentBuffer = "";
