@@ -1,4 +1,4 @@
-import { reply, help } from "./commands.js";
+import { reply, help, STATIC_BLOCKS } from "./commands.js";
 
 // Easter egg: turn the static prompt into a real input as progressive
 // enhancement. Without JS the blinking cursor stays and nothing breaks.
@@ -148,16 +148,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     log.appendChild(out);
   }
 
-  // Commands that replay a static block, keyed by the canonical command and
-  // mapped to the selector they reprint. A trailing slash on the path is
-  // ignored (so `ls projects` and `ls projects/` are one command); to support
-  // another listable block, add a row here rather than another branch.
-  // Created with a null prototype so inherited Object.prototype properties
-  // (toString, __proto__, ...) cannot be exploited as commands.
-  const BLOCKS = Object.assign(Object.create(null), {
-    "./whoami.sh": ".whoami",
-    "ls projects": ".projects",
-  });
+  const BLOCKS = Object.assign(Object.create(null), STATIC_BLOCKS);
 
   const history = [];
   let historyIndex = 0;

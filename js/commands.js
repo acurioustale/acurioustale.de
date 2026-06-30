@@ -8,17 +8,27 @@ export const LAST_DEPLOY = 1782509511000;
 // (whoami.sh and projects/) are deliberately left out: you find them by running
 // `ls` and invoke them as in a real shell. Kept next to reply() so a test can
 // bind this listing to what terminal.js actually dispatches.
+export const ADVERTISED_COMMANDS = {
+  ls: "list directory contents",
+  uptime: "show how long the site has been running",
+  date: "print the current date and time",
+  sudo: "execute a command as superuser",
+  echo: "write arguments to the standard output",
+  clear: "clear the screen",
+  help: "show this help",
+};
+
+export const STATIC_BLOCKS = {
+  "./whoami.sh": ".whoami",
+  "ls projects": ".projects",
+};
+
 export function help() {
-  return [
-    "available commands:",
-    "  ls             list directory contents",
-    "  uptime         show how long the site has been running",
-    "  date           print the current date and time",
-    "  sudo           execute a command as superuser",
-    "  echo           write arguments to the standard output",
-    "  clear          clear the screen",
-    "  help           show this help",
-  ].join("\n");
+  const lines = ["available commands:"];
+  for (const [cmd, desc] of Object.entries(ADVERTISED_COMMANDS)) {
+    lines.push(`  ${cmd.padEnd(14)} ${desc}`);
+  }
+  return lines.join("\n");
 }
 
 export const MS_PER_MIN = 60000;
