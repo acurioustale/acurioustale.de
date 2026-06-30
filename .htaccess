@@ -17,6 +17,7 @@
   # and you must recompute it here and in index.html (check-csp.mjs prints it).
   Header always set Content-Security-Policy "default-src 'none'; script-src 'self' 'sha256-hl8MkVDxyJok1M6f1lpuyt9EwXqjBZ2mwv6d3otvj8c='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
 
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "no-referrer"
