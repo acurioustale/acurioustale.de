@@ -261,8 +261,13 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     }
   });
 
-  // Click the prompt line to focus it.
-  last.addEventListener("click", function () {
+  // Click anywhere in the terminal screen to focus the input — mirrors the
+  // behaviour of a real terminal window. Guards prevent stealing focus when
+  // the user is clicking a link or selecting text to copy.
+  screen.addEventListener("click", function (e) {
+    if (e.target.closest("a")) return;
+    if (window.getSelection && window.getSelection().toString().length > 0)
+      return;
     input.focus();
   });
 
