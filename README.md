@@ -157,8 +157,10 @@ with the one inline script — the pre-paint theme guard — allowlisted by its
 `index.html`: it adds `frame-ancestors 'none'` and `upgrade-insecure-requests`,
 which a meta tag can't express. The meta stays as the locally-testable baseline
 (the python dev server doesn't apply `.htaccess`), and `tools/check-csp.mjs`
-asserts the inline-script hash matches in both — so editing that script fails the
-build until both are updated. Verify the live headers after a deploy with
+asserts the inline-script hash matches in both **and** that the two policies stay
+consistent on every other directive (the header adds only `frame-ancestors` and
+`upgrade-insecure-requests`) — so editing that script, or loosening a directive in
+just one file, fails the build until both match. Verify the live headers after a deploy with
 `curl -sI https://acurioustale.de/ | grep -i 'content-security\|x-frame'`.
 
 ## Security
