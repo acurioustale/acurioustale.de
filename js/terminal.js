@@ -172,7 +172,13 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   function run() {
     const raw = input.value;
     const rawCmd = raw.trim();
-    if (!rawCmd) return;
+    if (!rawCmd) {
+      echoLine(raw);
+      input.value = "";
+      size();
+      screen.scrollTop = screen.scrollHeight;
+      return;
+    }
 
     if (history[history.length - 1] !== raw) {
       history.push(raw);
