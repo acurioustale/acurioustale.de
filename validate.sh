@@ -78,8 +78,14 @@ if have vnu; then
 	# Security Policy": vnu checks the page over file://, where script-src 'self'
 	# resolves to a null origin and so appears to block the same-origin js/
 	# modules; over https the policy allows them (verified in-browser).
-	vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
-		--also-check-css --also-check-svg "${files[@]}"
+	# On bash 3.2 (the macOS default) "${files[@]}" on an empty array trips
+	# set -u, so guard the expansion and skip vnu when find matched nothing.
+	if [[ ${#files[@]} -eq 0 ]]; then
+		echo "  no HTML/CSS/SVG files found to validate" >&2
+	else
+		vnu --filterpattern '.*(Trailing slash on void elements|Content Security Policy).*' \
+			--also-check-css --also-check-svg "${files[@]}"
+	fi
 else
 	skip vnu "HTML/CSS/SVG validation"
 fi
