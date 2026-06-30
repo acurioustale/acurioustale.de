@@ -57,4 +57,13 @@ if (bar) {
 
   bar.appendChild(btn);
   render();
+
+  window.addEventListener("storage", function (e) {
+    if (e.key === "theme") {
+      const newTheme = normalizeMode(e.newValue);
+      if (newTheme === "auto") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", newTheme);
+      render();
+    }
+  });
 }
