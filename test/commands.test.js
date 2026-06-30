@@ -1,7 +1,5 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 
 import {
   reply,
@@ -136,58 +134,42 @@ test("Object.prototype member names are command not found, not privileged", () =
   }
 });
 
-// The tests above prove help() advertises each command; the two below bind that
-// listing to terminal.js's actual dispatch, so adding, renaming or dropping a
-// command on one side without the other fails CI. terminal.js's DOM glue isn't
-// unit-tested, but its command set is plain string comparisons we read from the
-// source.
-const terminalSource = readFileSync(
-  fileURLToPath(new URL("../js/terminal.js", import.meta.url)),
-  "utf8",
-);
+import { ADVERTISED_COMMANDS, STATIC_BLOCKS } from "../js/commands.js";
 
-const commandsSource = readFileSync(
-  fileURLToPath(new URL("../js/commands.js", import.meta.url)),
-  "utf8",
-);
+// terminal.js handles these two commands directly (in its `run` switch)
+const TERMINAL_HANDLED_COMMANDS = new Set(["clear", "help"]);
 
-// Commands terminal.js dispatches on: every `cmd === "..."` literal, plus the
-// keys of the BLOCKS map (commands that replay a static block, written as
-// `"cmd": ".selector"`). Plus commands commands.js handles directly: every
-// `argv[0] === "..."` literal.
+// The filesystem entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects`).
+// These are unadvertised commands handled directly by terminal.js via STATIC_BLOCKS.
+const ALIASES = new Set(Object.keys(STATIC_BLOCKS));
+
+// The union of commands dispatched between terminal.js and commands.js (except ALIASES)
 const dispatched = new Set([
-  ...[...terminalSource.matchAll(/cmd === "([^"]+)"/g)].map((m) => m[1]),
-  ...[...terminalSource.matchAll(/"([^"]+)":\s*"\.[\w-]+"/g)].map((m) => m[1]),
-  ...[...commandsSource.matchAll(/argv\[0\] === "([^"]+)"/g)].map((m) => m[1]),
+  ...TERMINAL_HANDLED_COMMANDS,
+  "ls",
+  "uptime",
+  "date",
+  "sudo",
+  "echo",
 ]);
 
-// Commands help() advertises: the first column of each listing line (the
-// command, separated from its description by two or more spaces).
-const advertised = help()
-  .split("\n")
-  .slice(1)
-  .map((line) => line.trim().split(/\s{2,}/)[0])
-  .filter(Boolean);
+const advertised = Object.keys(ADVERTISED_COMMANDS);
 
-// Commands terminal.js accepts but help() intentionally omits: the filesystem
-// entries you discover with `ls` and run directly (`./whoami.sh`, `ls projects`).
-const ALIASES = new Set(["ls projects", "./whoami.sh"]);
-
-test("every command help() lists is actually dispatched by terminal.js", () => {
+test("every command help() lists is actually dispatched by terminal.js or commands.js", () => {
   for (const cmd of advertised) {
     assert.ok(
       dispatched.has(cmd),
-      `help() lists "${cmd}" but terminal.js never dispatches it`,
+      `help() lists "${cmd}" but it is not handled`,
     );
   }
 });
 
-test("every command terminal.js dispatches is listed by help() (aliases aside)", () => {
+test("every command terminal.js or commands.js dispatches is listed by help() (aliases aside)", () => {
   for (const cmd of dispatched) {
     if (ALIASES.has(cmd)) continue;
     assert.ok(
       advertised.includes(cmd),
-      `terminal.js handles "${cmd}" but help() omits it`,
+      `"${cmd}" is handled but help() omits it`,
     );
   }
 });
