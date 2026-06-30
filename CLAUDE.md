@@ -131,7 +131,8 @@ denied", paths with `/` get "No such file or directory", anything else gets
 testing — `theme.js` (`nextTheme()`, `normalizeMode()`) and `commands.js`
 (`reply()` for the command replies and denials, `help()` for the listing,
 `formatUptime()` for the `uptime` output) — and exercised by `test/theme.test.js`,
-`test/commands.test.js`, `test/themeColor.test.js` and `test/themeGuard.test.js`.
+`test/commands.test.js`, `test/themeColor.test.js`, `test/themeFallback.test.js`
+and `test/themeGuard.test.js`.
 The DOM glue in the two UI modules is thin and verified in the browser, not
 unit-tested.
 
