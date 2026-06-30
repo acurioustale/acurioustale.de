@@ -31,7 +31,7 @@ node -e '
 	const fs = require("fs");
 	const file = process.argv[1];
 	const before = fs.readFileSync(file, "utf8");
-	const after = before.replace(/export const LAST_DEPLOY = \d+;/, "export const LAST_DEPLOY = " + Date.now() + ";");
+	const after = before.replace(/export\s+const\s+LAST_DEPLOY\s*=\s*\d+;/, "export const LAST_DEPLOY = " + Date.now() + ";");
 	if (after === before) {
 		console.error("deploy: could not find a LAST_DEPLOY assignment to stamp in " + file);
 		process.exit(1);
