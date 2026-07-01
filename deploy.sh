@@ -26,13 +26,16 @@ cp -R "${DEPLOY_ASSETS[@]}" "$stage"/
 # Stamp the deploy time directly into the staged js/commands.js so the live
 # site's `uptime` counts from this deploy. Stamping the staged copy leaves the
 # git working directory untouched, avoiding dirty working trees or race conditions
-# with local dev servers.
+# with local dev servers. The trailing `// <ISO>` comment is regenerated from the
+# same instant so the human-readable form never drifts from the millisecond value.
 echo "==> Updating deploy timestamp in staged js/commands.js"
 node -e '
 	const fs = require("fs");
 	const file = process.argv[1];
 	const before = fs.readFileSync(file, "utf8");
-	const after = before.replace(/export\s+const\s+LAST_DEPLOY\s*=\s*\d+;/, "export const LAST_DEPLOY = " + Date.now() + ";");
+	const now = Date.now();
+	const iso = new Date(now).toISOString().replace(/\.\d{3}Z$/, "Z");
+	const after = before.replace(/export\s+const\s+LAST_DEPLOY\s*=\s*\d+;(?:[ \t]*\/\/[^\n]*)?/, "export const LAST_DEPLOY = " + now + "; // " + iso);
 	if (after === before) {
 		console.error("deploy: could not find a LAST_DEPLOY assignment to stamp in " + file);
 		process.exit(1);
