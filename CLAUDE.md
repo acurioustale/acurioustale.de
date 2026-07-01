@@ -19,6 +19,7 @@ python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
 npm run lint                  # lint JS, JSON, CSS and Markdown (ESLint, stylelint, markdownlint-cli2)
 npm run format                # Prettier write across the repo (format:check verifies; used by CI)
 npm test                      # run unit tests (node --test)
+npm run coverage              # unit tests + coverage thresholds (the gate CI enforces)
 npm run test:e2e              # run browser smoke tests (Playwright, chromium; separate from CI gate)
 npm run links                 # check links locally (lychee, separate from CI gate)
 ./validate.sh                 # run the FULL gate locally: shell, format, lint, tests, xml, csp, og-image, svg
@@ -33,8 +34,9 @@ validates the HTML, CSS and SVG (Nu Html Checker), checks XML well-formedness of
 (svgo), lints the shell scripts (ShellCheck and shfmt), the workflows
 (actionlint), the JS, JSON and inline HTML scripts (ESLint with `@eslint/json`
 and `eslint-plugin-html`), the CSS (stylelint) and the Markdown
-(markdownlint-cli2), runs the unit tests (`node --test`, via `npm test`) and the
-CSP and og-image guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`) on
+(markdownlint-cli2), runs the unit tests under a coverage gate (`node --test
+--experimental-test-coverage`, via `npm run coverage`) and the CSP and og-image
+guards (`tools/check-csp.mjs`, `tools/check-og-image.mjs`) on
 every push and pull request, and deploys are gated on all of them passing. Run
 the same checks locally with `./validate.sh` (needs `brew install vnu
 shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: Prettier,
@@ -159,6 +161,18 @@ toggle actually repainting the page — has no layout or computed `color-scheme`
 under jsdom, so it is covered by Playwright browser smoke tests in
 `e2e/terminal.spec.js` (run via `npm run test:e2e`, served by python's
 http.server per `playwright.config.js`).
+
+`npm run coverage` runs the same `node --test` suite with
+`--experimental-test-coverage` and fails if the unit-tested surface drops below
+the pinned thresholds (lines 98%, branches 95%, functions 100%). This is the
+test step `validate.sh` and CI run — plain `npm test` stays available for fast
+local iteration without the gate. The two DOM-glue modules (`js/terminal.js`,
+`js/theme-toggle.js`) are excluded from the coverage accounting because their
+paint-dependent half is deliberately covered by Playwright, not `node --test`,
+so counting them here would demand covering code a node-only run can't reach.
+The pure-logic modules and the shared `tools/` helpers carry the gate instead.
+Passing `--test-coverage-exclude` overrides Node's default test-file exclusion,
+so `test/**` is re-excluded explicitly alongside the two modules.
 
 The page sends a strict Content-Security-Policy **twice**: a `<meta http-equiv>`
 tag in `index.html` and an HTTP header in `.htaccess`. Both are `default-src
