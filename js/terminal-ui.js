@@ -59,3 +59,12 @@ export function shouldGrabFocus({
   if (metaKey || ((ctrlKey || altKey) && !altGraph)) return false;
   return key.length === 1;
 }
+
+// Whether a resize warrants re-freezing the screen height. Only a width change
+// reflows the card and so changes the boot height; a height-only resize leaves
+// the frozen height correct, so it must be a no-op (this guard is the whole
+// reason the ResizeObserver is preferred over window resize events). Shared by
+// both the ResizeObserver and the resize-listener fallback in terminal.js.
+export function shouldRefit(newWidth, lastWidth) {
+  return newWidth !== lastWidth;
+}
