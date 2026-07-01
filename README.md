@@ -240,8 +240,11 @@ time, or on a key rotation — is a manual, admin-only procedure:
 ### Security headers
 
 `.htaccess` sets the production security headers the static files can't set
-themselves: a `Content-Security-Policy` plus `X-Content-Type-Options`,
-`X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`. The CSP is
+themselves: a `Content-Security-Policy`, `Strict-Transport-Security` (HSTS),
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+`Permissions-Policy`, the cross-origin isolation trio (`Cross-Origin-Opener-Policy`,
+`Cross-Origin-Embedder-Policy`, `Cross-Origin-Resource-Policy`), and it unsets the
+`Server` banner. The CSP is
 all-same-origin (`default-src 'none'`, `script-src`/`style-src`/`img-src 'self'`)
 with the one inline script — the pre-paint theme guard — allowlisted by its
 `sha256` hash. This header CSP is the production superset of the `<meta>` CSP in

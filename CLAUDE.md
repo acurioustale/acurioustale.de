@@ -178,8 +178,11 @@ editing:
   not executed, and needs none either. The inline-script extraction logic used by
   `check-csp.mjs` is shared in `tools/inline-scripts.mjs` (also used by
   `test/themeGuard.test.js`).
-- The other security headers (`X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`, `Permissions-Policy`) and caching rules (long-cache for
+- The other security headers (`Strict-Transport-Security`,
+  `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy`, the cross-origin isolation trio
+  `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy`/`Cross-Origin-Resource-Policy`,
+  and a `Header always unset Server`) and caching rules (long-cache for
   static images, no-cache for HTML/CSS/JS) also live in `.htaccess`. None of
   these apply under the python dev server; verify them after a deploy with
   `curl -sI https://acurioustale.de/`.
