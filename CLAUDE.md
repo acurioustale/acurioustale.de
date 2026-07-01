@@ -188,6 +188,14 @@ The deploy key is jailed server-side to a forced `rsync` command that matches th
 exact path prefix — no shell, no pull, no traversal. Changing the target breaks the
 deploy. See the README for the full explanation.
 
+Two deploy invariants: `deploy.sh` must stage the full deploy set (the
+`DEPLOY_ASSETS` array — a file added to the site but not to that array never
+ships), and because the jail only permits the one `rsync` push it is written
+for, any new remote SSH command the deploy runs needs a matching allow-entry in
+the forced command. That command lives on the host; a reviewed copy is checked
+in at `ops/rsync-jail-acurioustale.sh` (server file authoritative, installed by
+hand — see `ops/README.md`).
+
 ## Conventions
 
 Commits follow Conventional Commits (`type(scope): imperative`, lowercase, ≤72-char header, no attribution trailers, hyphens not dashes). Scopes seen in history: `deploy`, `js`, `terminal`, `security`, `commands`, `tools`, `validate`, `links`, `deps`, `site`. Versioning is SemVer.
