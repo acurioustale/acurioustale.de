@@ -74,12 +74,16 @@ so a drifted local tool is caught before it surfaces as a mystery CI reformat.
 Node is also pinned in `.tool-versions`; a version mismatch there emits a warning
 (not a hard error) since it can still pass locally while behaving differently in CI.
 
-The tests come in layers. `npm test` (`node --test`, part of the `validate.sh`
-gate) runs the pure-logic unit tests plus jsdom DOM-wiring tests that drive the
-modules against a document built from the real `index.html`. Layout- and
-paint-dependent behaviour jsdom can't model — the frozen screen height, the input
-growing with its content, click-to-focus and the toggle actually repainting the
-page — is covered by Playwright browser smoke tests. Those run separately (they
+The tests come in layers. `npm test` (`node --test`) runs the pure-logic unit
+tests plus jsdom DOM-wiring tests that drive the modules against a document built
+from the real `index.html`. The `validate.sh` gate runs the same suite through
+`npm run coverage` (`node --test --experimental-test-coverage`), which fails if
+the unit-tested surface drops below the pinned thresholds (lines 98%, branches
+95%, functions 100%); the two DOM-glue modules are excluded from that accounting
+because their paint-dependent half is covered by Playwright, not `node --test`.
+Layout- and paint-dependent behaviour jsdom can't model — the frozen screen
+height, the input growing with its content, click-to-focus and the toggle
+actually repainting the page — is covered by Playwright browser smoke tests. Those run separately (they
 download a browser, so they never gate a deploy) on pull requests and pushes to
 `main` via the [`e2e` workflow](.github/workflows/e2e.yml). To run them by hand
 (the config starts python's `http.server` itself and reuses a running one):
@@ -122,7 +126,8 @@ well-formedness of `sitemap.xml` (xmllint), checks formatting with Prettier,
 keeps the SVGs optimised with svgo, lints the shell scripts (ShellCheck, shfmt),
 the workflows (actionlint), and the JS, JSON, inline HTML scripts, CSS and
 Markdown (ESLint with `@eslint/json` and `eslint-plugin-html`, stylelint,
-markdownlint-cli2), runs the unit tests (`node --test`), and checks the CSP hash
+markdownlint-cli2), runs the unit tests under a coverage gate (`node --test
+--experimental-test-coverage`), and checks the CSP hash
 and og-image dimensions. Only if everything passes does it run `deploy.sh`. The
 workflow runs on every push to `main` (and can be triggered manually from the
 Actions tab); pull requests run the same gate without deploying. Both jobs run
