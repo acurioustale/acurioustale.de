@@ -1,5 +1,10 @@
 import { reply, help, STATIC_BLOCKS } from "./commands.js";
-import { capLimit, recallHistory, shouldGrabFocus } from "./terminal-ui.js";
+import {
+  capLimit,
+  recallHistory,
+  shouldGrabFocus,
+  shouldRefit,
+} from "./terminal-ui.js";
 
 // Easter egg: turn the static prompt into a real input as progressive
 // enhancement. Without JS the blinking cursor stays and nothing breaks.
@@ -98,7 +103,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   if (window.ResizeObserver) {
     const ro = new ResizeObserver(function (entries) {
       const newWidth = entries[0].target.getBoundingClientRect().width;
-      if (newWidth !== lastWidth) {
+      if (shouldRefit(newWidth, lastWidth)) {
         lastWidth = newWidth;
         fitScreen();
       }
@@ -111,7 +116,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       resizeFrame = requestAnimationFrame(function () {
         resizeFrame = 0;
         const newWidth = screen.getBoundingClientRect().width;
-        if (newWidth !== lastWidth) {
+        if (shouldRefit(newWidth, lastWidth)) {
           lastWidth = newWidth;
           fitScreen();
         }

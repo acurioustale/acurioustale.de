@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { capLimit, recallHistory, shouldGrabFocus } from "../js/terminal-ui.js";
+import {
+  capLimit,
+  recallHistory,
+  shouldGrabFocus,
+  shouldRefit,
+} from "../js/terminal-ui.js";
 
 test("capLimit drops only the overflow past the cap, never at or below it", () => {
   assert.equal(capLimit(0, 200), 0);
@@ -106,4 +111,12 @@ test("AltGr (Ctrl+Alt) types a character, so it grabs focus", () => {
     shouldGrabFocus({ ...base, ctrlKey: true, altKey: true, altGraph: true }),
     true,
   );
+});
+
+// shouldRefit gates the screen-height re-freeze: only a width change reflows the
+// card, so a height-only resize (same width) must be a no-op.
+test("shouldRefit re-freezes only when the width changed", () => {
+  assert.equal(shouldRefit(500, 400), true); // width grew
+  assert.equal(shouldRefit(400, 500), true); // width shrank
+  assert.equal(shouldRefit(400, 400), false); // height-only resize: no-op
 });
