@@ -1,4 +1,5 @@
 import { reply, help, STATIC_BLOCKS } from "./commands.js";
+import { capLimit, recallHistory, shouldGrabFocus } from "./terminal-ui.js";
 
 // Easter egg: turn the static prompt into a real input as progressive
 // enhancement. Without JS the blinking cursor stays and nothing breaks.
@@ -179,7 +180,8 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   // every path that appends to the log, including a bare Enter, so repeatedly
   // submitting an empty prompt can't grow the DOM past the cap either.
   function capLog() {
-    while (log.children.length > MAX_LOG_NODES) {
+    let remove = capLimit(log.children.length, MAX_LOG_NODES);
+    while (remove-- > 0) {
       log.removeChild(log.firstElementChild);
     }
   }
@@ -246,25 +248,20 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     if (e.key === "Enter") {
       e.preventDefault();
       run();
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
-      if (historyIndex > 0) {
-        if (historyIndex === history.length) {
-          currentBuffer = input.value;
-        }
-        historyIndex--;
-        input.value = history[historyIndex];
-        size();
-      }
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (historyIndex < history.length - 1) {
-        historyIndex++;
-        input.value = history[historyIndex];
-        size();
-      } else if (historyIndex === history.length - 1) {
-        historyIndex++;
-        input.value = currentBuffer;
+      const direction = e.key === "ArrowUp" ? "up" : "down";
+      const next = recallHistory(
+        history,
+        historyIndex,
+        currentBuffer,
+        input.value,
+        direction,
+      );
+      if (next) {
+        historyIndex = next.index;
+        currentBuffer = next.buffer;
+        input.value = next.value;
         size();
       }
     }
@@ -291,13 +288,25 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   if (terminalNode) {
     terminalNode.addEventListener("keydown", function (e) {
       const ae = document.activeElement;
-      if (ae && ae !== document.body && ae !== document.documentElement) return;
+      // Focus is "passive" when it rests on nothing in particular, so grabbing
+      // it can't steal it from a real control (a link, the theme toggle, …).
+      const activePassive =
+        !ae || ae === document.body || ae === document.documentElement;
       // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
       // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
       const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
-      if (e.metaKey || ((e.ctrlKey || e.altKey) && !altGraph)) return;
-      if (e.key.length !== 1) return;
-      input.focus({ preventScroll: true });
+      if (
+        shouldGrabFocus({
+          activePassive,
+          metaKey: e.metaKey,
+          ctrlKey: e.ctrlKey,
+          altKey: e.altKey,
+          altGraph,
+          key: e.key,
+        })
+      ) {
+        input.focus({ preventScroll: true });
+      }
     });
   }
 
