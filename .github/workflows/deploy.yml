@@ -82,14 +82,17 @@ jobs:
         run: npm run format:check
 
       # shellcheck is preinstalled on ubuntu-latest; shfmt we fetch as a pinned
-      # static binary so CI matches what developers run locally.
+      # static binary so CI matches what developers run locally. Discover every
+      # tracked shell script with git ls-files (mirroring validate.sh) so the
+      # ops/ rsync-jail script is linted alongside deploy.sh and validate.sh.
       - name: Lint and format-check shell scripts
         run: |
-          shellcheck deploy.sh validate.sh
+          mapfile -t sh_files < <(git ls-files '*.sh')
+          shellcheck "${sh_files[@]}"
           curl -sSfL -o "$RUNNER_TEMP/shfmt" \
             https://github.com/mvdan/sh/releases/download/v${{ steps.versions.outputs.shfmt }}/shfmt_v${{ steps.versions.outputs.shfmt }}_linux_amd64
           chmod +x "$RUNNER_TEMP/shfmt"
-          "$RUNNER_TEMP/shfmt" -d deploy.sh validate.sh
+          "$RUNNER_TEMP/shfmt" -d "${sh_files[@]}"
 
       # actionlint validates the workflow itself and runs ShellCheck over the
       # embedded run scripts. Pinned static binary, no repo dependencies.
