@@ -149,6 +149,14 @@ listed above (`index.html`, `.htaccess`, `robots.txt`, `sitemap.xml`,
 `humans.txt`, `css/`, `js/` and `assets/`) are pushed, so unrelated files
 elsewhere in the web root are left untouched.
 
+Two invariants tie the deploy to the jail. First, `deploy.sh` must stage the
+full deploy set (the `DEPLOY_ASSETS` array): a file added to the site but left
+out of that array never ships. Second, the jail only permits the one `rsync`
+push it is written for, so any new remote SSH command the deploy learns to run
+needs a matching allow-entry in the forced command
+(`ops/rsync-jail-acurioustale.sh`, a reviewed copy of the server-authoritative
+file — see [`ops/README.md`](ops/README.md)).
+
 ### Security headers
 
 `.htaccess` sets the production security headers the static files can't set
