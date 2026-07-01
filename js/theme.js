@@ -21,3 +21,22 @@ export function nextTheme(current, osPrefersLight) {
     : ["auto", "light", "dark"];
   return order[(order.indexOf(current) + 1) % order.length];
 }
+
+// The `media` attribute each <meta name="theme-color"> must carry for a given
+// mode, returned as { light, dark } for the light- and dark-palette metas. In
+// "auto" both keep their prefers-color-scheme queries so the OS drives the tint;
+// a forced light/dark makes the matching meta apply to all media and the other
+// to none. Extracted from theme-toggle.js's setScheme so the all/"not all"
+// mapping — easy to invert — is unit-tested. See test/theme.test.js.
+export function metaMediaFor(mode) {
+  if (mode === "auto") {
+    return {
+      light: "(prefers-color-scheme: light)",
+      dark: "(prefers-color-scheme: dark)",
+    };
+  }
+  return {
+    light: mode === "light" ? "all" : "not all",
+    dark: mode === "dark" ? "all" : "not all",
+  };
+}

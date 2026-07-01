@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { nextTheme, normalizeMode } from "../js/theme.js";
+import { nextTheme, normalizeMode, metaMediaFor } from "../js/theme.js";
 
 test("normalizeMode honours the two explicit overrides", () => {
   assert.equal(normalizeMode("light"), "light");
@@ -66,4 +66,22 @@ test("the colour-neutral step is the wrap back to auto, never the first click", 
 test("an unknown current mode steps to the start of the cycle", () => {
   assert.equal(nextTheme("bogus", true), "auto");
   assert.equal(nextTheme("bogus", false), "auto");
+});
+
+// metaMediaFor drives the <meta name="theme-color"> media attributes. The
+// forced-scheme mapping (which meta applies to "all" and which to "not all") is
+// easy to invert, so pin every case.
+test("auto keeps both theme-color metas on their prefers-color-scheme queries", () => {
+  assert.deepEqual(metaMediaFor("auto"), {
+    light: "(prefers-color-scheme: light)",
+    dark: "(prefers-color-scheme: dark)",
+  });
+});
+
+test("forced light applies the light meta to all media and mutes the dark one", () => {
+  assert.deepEqual(metaMediaFor("light"), { light: "all", dark: "not all" });
+});
+
+test("forced dark applies the dark meta to all media and mutes the light one", () => {
+  assert.deepEqual(metaMediaFor("dark"), { light: "not all", dark: "all" });
 });

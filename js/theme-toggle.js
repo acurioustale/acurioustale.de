@@ -1,4 +1,4 @@
-import { nextTheme, normalizeMode } from "./theme.js";
+import { nextTheme, normalizeMode, metaMediaFor } from "./theme.js";
 
 // Inject the theme toggle as progressive enhancement: without JS the OS
 // preference still drives light/dark via CSS, and no dead control shows.
@@ -39,13 +39,9 @@ if (bar) {
       'meta[name="theme-color"][content="#0e0f10"]',
     );
     if (lightMeta && darkMeta) {
-      if (to === "auto") {
-        lightMeta.setAttribute("media", "(prefers-color-scheme: light)");
-        darkMeta.setAttribute("media", "(prefers-color-scheme: dark)");
-      } else {
-        lightMeta.setAttribute("media", to === "light" ? "all" : "not all");
-        darkMeta.setAttribute("media", to === "dark" ? "all" : "not all");
-      }
+      const media = metaMediaFor(to);
+      lightMeta.setAttribute("media", media.light);
+      darkMeta.setAttribute("media", media.dark);
     }
   }
 
