@@ -26,6 +26,7 @@
     "@playwright/test": "^1.61.1",
     "eslint": "^10.5.0",
     "eslint-plugin-html": "^8.1.4",
+    "fast-check": "^4.8.0",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
     "markdownlint-cli2": "^0.22.1",
