@@ -1,7 +1,10 @@
 // Pure terminal command logic, extracted so it can be unit-tested without a DOM
 // (see test/commands.test.js). The DOM wiring lives in terminal.js.
 
-export const LAST_DEPLOY = 1782509511000;
+// Stamped to the deploy time by deploy.sh (which regenerates the trailing ISO
+// comment too, so it never drifts from the number). This checked-in value is a
+// placeholder for local dev; formatUptime clamps it when it is still in the future.
+export const LAST_DEPLOY = 1782509511000; // 2026-06-26T21:31:51Z
 
 // The commands `help` advertises, so the prompt stays discoverable — without it
 // a cleared screen gives no hint of what to type. The filesystem entries
