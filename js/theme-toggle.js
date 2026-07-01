@@ -78,11 +78,13 @@ if (bar) {
   }
   render();
 
+  // When another tab changes the theme, mirror it here. Delegate to apply() so
+  // the <meta name="theme-color"> tags stay in sync too, not just data-theme.
+  // apply() re-persists the value, but the shared localStorage already holds it
+  // by the time this fires, so the write is a no-op and can't loop.
   window.addEventListener("storage", function (e) {
     if (e.key === "theme") {
-      const newTheme = normalizeMode(e.newValue);
-      if (newTheme === "auto") root.removeAttribute("data-theme");
-      else root.setAttribute("data-theme", newTheme);
+      apply(normalizeMode(e.newValue));
       render();
     }
   });
