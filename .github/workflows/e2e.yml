@@ -1,0 +1,43 @@
+name: e2e
+
+# Browser smoke tests (Playwright) for the layout- and theming-dependent
+# behaviour the jsdom wiring tests can't reach: the frozen screen height, the
+# input growing with its content, click-to-focus and the theme toggle actually
+# repainting the page. Kept separate from the required `validate` gate and, like
+# link checking, non-blocking for deploys: it downloads a browser and shouldn't
+# fail a release on a flake. Deploys gate on `validate` (see deploy.yml), not on
+# this.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".tool-versions"
+          cache: npm
+
+      - name: Install npm tooling
+        run: npm ci
+
+      # Only chromium, matching the single project in playwright.config.js;
+      # --with-deps pulls the system libraries the browser needs on the runner.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.js starts `python3 -m http.server` itself (python3 is
+      # preinstalled on ubuntu-latest), mirroring the local dev server.
+      - name: Run browser smoke tests
+        run: npx playwright test

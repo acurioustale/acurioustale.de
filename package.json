@@ -15,12 +15,14 @@
     "links": "lychee --config lychee.toml index.html README.md CLAUDE.md SECURITY.md",
     "validate": "./validate.sh",
     "test": "node --test",
+    "test:e2e": "playwright test",
     "check:csp": "node tools/check-csp.mjs",
     "check:og": "node tools/check-og-image.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@eslint/json": "^2.0.0",
+    "@playwright/test": "^1.61.1",
     "eslint": "^10.5.0",
     "eslint-plugin-html": "^8.1.4",
     "globals": "^17.7.0",

@@ -17,6 +17,12 @@ node_modules/
 *.log
 *.tgz
 
+# Playwright browser smoke tests (artifacts, not the specs)
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright/
+
 # Local env / secrets
 .env
 .env.*
