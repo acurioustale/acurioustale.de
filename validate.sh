@@ -73,11 +73,6 @@ if have vnu; then
 		files+=("$file")
 	done < <(find . \( -path ./.git -o -path ./node_modules \) -prune -o \
 		\( -name '*.html' -o -name '*.css' -o -name '*.svg' \) -print0)
-	# Filter two benign infos. "Trailing slash on void elements": Prettier adds
-	# `/>` as house style and vnu notes (info level) it's a no-op. "Content
-	# Security Policy": vnu checks the page over file://, where script-src 'self'
-	# resolves to a null origin and so appears to block the same-origin js/
-	# modules; over https the policy allows them (verified in-browser).
 	# On bash 3.2 (the macOS default) "${files[@]}" on an empty array trips
 	# set -u, so guard the expansion and skip vnu when find matched nothing.
 	# Filter benign infos. "Trailing slash on void elements": Prettier adds
