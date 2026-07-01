@@ -105,8 +105,15 @@ fi
 if have shellcheck && have shfmt; then
 	step "Shell scripts (shellcheck + shfmt)"
 	require_version shfmt "$SHFMT_VERSION" "$(shfmt --version)"
-	shellcheck ./*.sh
-	shfmt -d ./*.sh
+	# Discover every tracked shell script (git ls-files), not just the top-level
+	# *.sh, so the ops/ rsync-jail script is linted too — a shell bug there is
+	# worth catching in the reviewed copy before it is hand-copied to the host.
+	sh_files=()
+	while IFS= read -r file; do
+		sh_files+=("$file")
+	done < <(git ls-files '*.sh')
+	shellcheck "${sh_files[@]}"
+	shfmt -d "${sh_files[@]}"
 else
 	skip shellcheck/shfmt "shell checks"
 fi

@@ -3,7 +3,10 @@
 Operational configuration that is **not** part of the deployed site and is
 **not** run by CI or `deploy.sh`. Files here are reviewed reference copies of
 things installed by hand on the web host, kept in version control so they can be
-reviewed, diffed and restored.
+reviewed, diffed and restored. Shell scripts here are still linted, though:
+`validate.sh` and CI discover every tracked `*.sh` (via `git ls-files`), so
+shellcheck and shfmt catch a shell bug in the reviewed copy before it is
+hand-copied to the host.
 
 ## `rsync-jail-acurioustale.sh`
 

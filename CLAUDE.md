@@ -31,7 +31,8 @@ npm run links                 # check links locally (lychee, separate from CI ga
 There is no build step for the site — edit the files and reload the browser. CI
 validates the HTML, CSS and SVG (Nu Html Checker), checks XML well-formedness of
 `sitemap.xml` (xmllint), checks formatting (Prettier), keeps the SVGs optimised
-(svgo), lints the shell scripts (ShellCheck and shfmt), the workflows
+(svgo), lints every tracked shell script including `ops/` (ShellCheck and shfmt,
+discovered via `git ls-files '*.sh'`), the workflows
 (actionlint), the JS, JSON and inline HTML scripts (ESLint with `@eslint/json`
 and `eslint-plugin-html`), the CSS (stylelint) and the Markdown
 (markdownlint-cli2), runs the unit tests under a coverage gate (`node --test
