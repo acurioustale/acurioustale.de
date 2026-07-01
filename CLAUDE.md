@@ -115,7 +115,11 @@ Keep these consistent: the `localStorage` key is `"theme"` with values
 attribute on `<html>`. The two `<meta name="theme-color">` values (one per
 `prefers-color-scheme`) must equal the CSS `--page-bg` light/dark sides;
 `test/themeColor.test.js` enforces that so the browser chrome can't drift from
-the page background. `test/themeGuard.test.js` verifies the inline pre-paint
+the page background. `theme-toggle.js` also locates those two metas by hardcoding
+their exact `content=` hex into its `querySelector` calls; `test/themeToggleMeta.test.js`
+binds those selectors back to the metas so renaming the palette can't silently
+break the toggle's chrome-tint sync (the guarded lookup would otherwise just skip
+the update). `test/themeGuard.test.js` verifies the inline pre-paint
 guard stays consistent with the module-based `normalizeMode()` by extracting and
 evaluating the inline scripts (via `tools/inline-scripts.mjs`).
 
@@ -178,8 +182,11 @@ editing:
   not executed, and needs none either. The inline-script extraction logic used by
   `check-csp.mjs` is shared in `tools/inline-scripts.mjs` (also used by
   `test/themeGuard.test.js`).
-- The other security headers (`X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`, `Permissions-Policy`) and caching rules (long-cache for
+- The other security headers (`Strict-Transport-Security`,
+  `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy`, the cross-origin isolation trio
+  `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy`/`Cross-Origin-Resource-Policy`,
+  and a `Header always unset Server`) and caching rules (long-cache for
   static images, no-cache for HTML/CSS/JS) also live in `.htaccess`. None of
   these apply under the python dev server; verify them after a deploy with
   `curl -sI https://acurioustale.de/`.

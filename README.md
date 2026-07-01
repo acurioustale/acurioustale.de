@@ -21,26 +21,30 @@ help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested i
 
 ```text
 .
-├── index.html          ← the page (markup + the inline pre-paint theme guard)
-├── css/style.css       ← terminal styling, light/dark via light-dark() tokens
-├── js/                 ← theme toggle + terminal easter egg, and their pure logic
-├── test/               ← unit tests for the pure logic (node --test)
-├── tools/              ← dev-time CI checks (CSP hash, og-image, inline-script extraction)
-├── assets/             ← favicon (SVG + 32px PNG), apple-touch icon, Open Graph share image
-├── .htaccess           ← Apache security headers + production CSP (deployed)
-├── robots.txt          ← allow-all crawl rule + sitemap pointer
-├── sitemap.xml         ← single-page sitemap
-├── humans.txt          ← the people behind the site (linked via rel="author")
-├── og-image.src.svg    ← editable source for assets/og-image.png (not deployed)
-├── lychee.toml         ← link-checker config (used by the links workflow)
-├── CLAUDE.md           ← guidance for AI coding assistants
-├── SECURITY.md         ← security policy: how to report a vulnerability
-├── package.json        ← npm-only dev tools (ESLint, stylelint, markdownlint-cli2, Prettier, svgo)
-├── eslint.config.mjs   ← ESLint flat config (JS and JSON linting)
-├── svgo.config.mjs     ← svgo configuration for SVG optimisation
-├── .github/workflows/  ← deploy (gating checks) + links (lychee) CI
-├── validate.sh         ← run all gating CI checks locally
-└── deploy.sh           ← rsync deploy to the web host (via staging directory)
+├── index.html           ← the page (markup + the inline pre-paint theme guard)
+├── css/style.css        ← terminal styling, light/dark via light-dark() tokens
+├── js/                  ← theme toggle + terminal easter egg, and their pure logic
+├── test/                ← unit tests (pure logic) + jsdom DOM-wiring tests (node --test)
+├── e2e/                 ← Playwright browser smoke tests (npm run test:e2e)
+├── tools/               ← dev-time CI checks (CSP hash, og-image, inline-script extraction)
+├── assets/              ← favicon (SVG + 32px PNG), apple-touch icon, Open Graph share image
+├── ops/                 ← reviewed copy of the server-side rsync deploy jail
+├── .htaccess            ← Apache security headers + production CSP (deployed)
+├── robots.txt           ← allow-all crawl rule + sitemap pointer
+├── sitemap.xml          ← single-page sitemap
+├── humans.txt           ← the people behind the site (linked via rel="author")
+├── og-image.src.svg     ← editable source for assets/og-image.png (not deployed)
+├── lychee.toml          ← link-checker config (used by the links workflow)
+├── CLAUDE.md            ← guidance for AI coding assistants
+├── GEMINI.md            ← symlink to CLAUDE.md (same guidance, for Gemini)
+├── SECURITY.md          ← security policy: how to report a vulnerability
+├── package.json         ← npm-only dev tools (ESLint, stylelint, markdownlint-cli2, Prettier, svgo, jsdom, Playwright)
+├── eslint.config.mjs    ← ESLint flat config (JS and JSON linting)
+├── svgo.config.mjs      ← svgo configuration for SVG optimisation
+├── playwright.config.js ← Playwright config for the e2e smoke tests
+├── .github/workflows/   ← deploy (gating) + links (lychee) + e2e (Playwright) CI
+├── validate.sh          ← run all gating CI checks locally
+└── deploy.sh            ← rsync deploy to the web host (via staging directory)
 ```
 
 ## Development
@@ -58,7 +62,7 @@ then run the script:
 
 ```bash
 brew install vnu shellcheck shfmt actionlint   # one-time
-npm install                                    # one-time (ESLint, stylelint, markdownlint-cli2, Prettier, svgo)
+npm install                                    # one-time (ESLint, stylelint, markdownlint-cli2, Prettier, svgo, jsdom, Playwright)
 ./validate.sh
 ```
 
@@ -69,6 +73,21 @@ actionlint) _is_ present, it asserts the version matches the one in `.tool-versi
 so a drifted local tool is caught before it surfaces as a mystery CI reformat.
 Node is also pinned in `.tool-versions`; a version mismatch there emits a warning
 (not a hard error) since it can still pass locally while behaving differently in CI.
+
+The tests come in layers. `npm test` (`node --test`, part of the `validate.sh`
+gate) runs the pure-logic unit tests plus jsdom DOM-wiring tests that drive the
+modules against a document built from the real `index.html`. Layout- and
+paint-dependent behaviour jsdom can't model — the frozen screen height, the input
+growing with its content, click-to-focus and the toggle actually repainting the
+page — is covered by Playwright browser smoke tests. Those run separately (they
+download a browser, so they never gate a deploy) on pull requests and pushes to
+`main` via the [`e2e` workflow](.github/workflows/e2e.yml). To run them by hand
+(the config starts python's `http.server` itself and reuses a running one):
+
+```bash
+npx playwright install chromium   # one-time browser download
+npm run test:e2e
+```
 
 Links are checked separately (they need the network and external hosts flake, so
 they never gate a deploy) — on pull requests and a weekly schedule via the
@@ -221,8 +240,11 @@ time, or on a key rotation — is a manual, admin-only procedure:
 ### Security headers
 
 `.htaccess` sets the production security headers the static files can't set
-themselves: a `Content-Security-Policy` plus `X-Content-Type-Options`,
-`X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`. The CSP is
+themselves: a `Content-Security-Policy`, `Strict-Transport-Security` (HSTS),
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+`Permissions-Policy`, the cross-origin isolation trio (`Cross-Origin-Opener-Policy`,
+`Cross-Origin-Embedder-Policy`, `Cross-Origin-Resource-Policy`), and it unsets the
+`Server` banner. The CSP is
 all-same-origin (`default-src 'none'`, `script-src`/`style-src`/`img-src 'self'`)
 with the one inline script — the pre-paint theme guard — allowlisted by its
 `sha256` hash. This header CSP is the production superset of the `<meta>` CSP in
