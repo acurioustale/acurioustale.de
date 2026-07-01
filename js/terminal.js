@@ -186,8 +186,10 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       return;
     }
 
-    if (history[history.length - 1] !== raw) {
-      history.push(raw);
+    // Dedupe and store the trimmed command: the executed form is rawCmd, so
+    // "  clear" and "clear" are the same entry, and recall replays what ran.
+    if (history[history.length - 1] !== rawCmd) {
+      history.push(rawCmd);
       if (history.length > MAX_HISTORY) {
         history.shift();
       }
