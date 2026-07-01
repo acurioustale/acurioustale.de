@@ -108,8 +108,12 @@ jobs:
 
       # Unit tests for the extracted pure logic (the theme cycle and the
       # terminal command replies), via Node's built-in runner — no extra deps.
-      - name: Run unit tests
-        run: npm test
+      # `coverage` runs the same suite with --experimental-test-coverage and
+      # fails if the unit-tested surface drops below the pinned thresholds. The
+      # two DOM-glue modules are excluded: their paint-dependent half is covered
+      # by the Playwright e2e job, which a node-only run can't see.
+      - name: Run unit tests and coverage thresholds
+        run: npm run coverage
 
       # Fail if the inline theme guard's sha256 isn't in the CSP (so the policy
       # can't drift), and if the og-image isn't the declared 1200x630.

@@ -125,8 +125,8 @@ npm run --silent format:check
 step "Linting JS, CSS and Markdown (eslint, stylelint, markdownlint-cli2)"
 npm run --silent lint
 
-step "Running unit tests (node --test)"
-npm test --silent
+step "Running unit tests + coverage thresholds (node --test)"
+npm run --silent coverage
 
 step "Checking the CSP covers the inline scripts"
 npm run --silent check:csp
