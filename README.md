@@ -134,7 +134,9 @@ leaked: on the host it's pinned to a forced command
 `authorized_keys`) that allows only an rsync _push_ into
 `html/acurioustale.de/` — no shell, no pull, and no path traversal outside that
 directory. This is why the deploy target in `deploy.sh` must keep its trailing
-slash; the jail matches on that exact prefix.
+slash; the jail matches on that exact prefix. See
+[Setting up the CI deploy key](#setting-up-the-ci-deploy-key) below to provision
+or rotate it from scratch.
 
 To deploy by hand instead (uses your own SSH access), run:
 
@@ -156,6 +158,65 @@ push it is written for, so any new remote SSH command the deploy learns to run
 needs a matching allow-entry in the forced command
 (`ops/rsync-jail-acurioustale.sh`, a reviewed copy of the server-authoritative
 file — see [`ops/README.md`](ops/README.md)).
+
+### Setting up the CI deploy key
+
+The auto-deploy authenticates to the host with a dedicated SSH key, jailed
+server-side so it can do nothing but push the site. Provisioning it — first
+time, or on a key rotation — is a manual, admin-only procedure:
+
+1. **Generate the key** (ed25519, no passphrase since CI can't type one):
+
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions-deploy@acurioustale.de" -f deploy_key -N ""
+   ```
+
+   This writes the private key `deploy_key` and the public key `deploy_key.pub`.
+
+2. **Install the jail on the host.** Copy the reviewed forced command from
+   `ops/` into the `web4186` account and make it executable:
+
+   ```bash
+   scp ops/rsync-jail-acurioustale.sh web4186@http2.core-networks.de:bin/
+   ssh web4186@http2.core-networks.de 'chmod +x bin/rsync-jail-acurioustale.sh'
+   ```
+
+   The script permits only an `rsync` push into `html/acurioustale.de/` — no
+   shell, no pull, no path traversal. `ops/rsync-jail-acurioustale.sh` is a
+   reviewed copy; the file on the host is authoritative (see
+   [`ops/README.md`](ops/README.md)).
+
+3. **Pin the public key to that forced command.** Add one line to
+   `~web4186/.ssh/authorized_keys`, wrapping the generated public key with the
+   forced command and `restrict` (OpenSSH's umbrella flag that disables the pty,
+   agent, port and X11 forwarding):
+
+   ```text
+   command="/home/www/web4186/bin/rsync-jail-acurioustale.sh",restrict <contents of deploy_key.pub>
+   ```
+
+   From here the key can only ever run the jail script, whatever CI asks of it —
+   this is what makes the private key harmless if leaked. It is also the
+   allow-list contract: if `deploy.sh` ever issues a remote SSH command beyond
+   the current `rsync` push, the jail rejects it until a matching allow-entry is
+   added to the forced command on the host **and** its reviewed copy in `ops/`.
+   [`ops/README.md`](ops/README.md) records the exact line currently installed.
+
+4. **Set the two repository secrets** (Settings → Secrets and variables →
+   Actions), which [`deploy.yml`](.github/workflows/deploy.yml) reads:
+
+   - **`DEPLOY_SSH_KEY`** — the **private** key: the full contents of
+     `deploy_key`.
+   - **`DEPLOY_KNOWN_HOSTS`** — the host's public key, so CI verifies the host
+     instead of trusting it on first connect:
+
+     ```bash
+     ssh-keyscan http2.core-networks.de
+     ```
+
+5. **Clean up and verify.** Remove the local key material now that it lives in
+   the secrets (`rm deploy_key deploy_key.pub`), then confirm the next push to
+   `main` deploys — or trigger the workflow manually from the Actions tab.
 
 ### Security headers
 
