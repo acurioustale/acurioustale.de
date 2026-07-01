@@ -28,10 +28,13 @@ esac
 
 # Versions pinned in .tool-versions. Asserted here (only when the tool is
 # present) so a drifted local tool is caught before it surfaces as a mystery
-# failure in CI. .tool-versions is the single source of truth.
-ci_node_version="$(awk '/^nodejs / {print $2}' .tool-versions)"
-SHFMT_VERSION="$(awk '/^shfmt / {print $2}' .tool-versions)"
-ACTIONLINT_VERSION="$(awk '/^actionlint / {print $2}' .tool-versions)"
+# failure in CI. .tool-versions is the single source of truth; read each pin
+# through one helper (matching the whole tool name, so "node" can't match
+# "nodejs") rather than repeating the awk per tool.
+tool_version() { awk -v tool="$1" '$1 == tool {print $2}' .tool-versions; }
+ci_node_version="$(tool_version nodejs)"
+SHFMT_VERSION="$(tool_version shfmt)"
+ACTIONLINT_VERSION="$(tool_version actionlint)"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 skip() { echo "note: $1 not installed - skipping $2 (CI enforces it)." >&2; }
