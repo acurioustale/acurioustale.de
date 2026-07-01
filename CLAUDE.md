@@ -8,7 +8,7 @@ The personal landing page for [acurioustale.de](https://acurioustale.de): a sing
 static `index.html` styled as a terminal "whoami" card, with one stylesheet and
 two small ES modules in `js/`. No framework and no build step; the deployed site
 ships no dependencies (the only npm packages are dev-time linters plus the jsdom
-test harness, see below). The
+and Playwright test harnesses, see below). The
 `js/` modules are plain ES modules served as-is and loaded with `type="module"` —
 no bundling.
 
@@ -19,6 +19,7 @@ python3 -m http.server 8000   # serve locally, then visit http://localhost:8000
 npm run lint                  # lint JS, JSON, CSS and Markdown (ESLint, stylelint, markdownlint-cli2)
 npm run format                # Prettier write across the repo (format:check verifies; used by CI)
 npm test                      # run unit tests (node --test)
+npm run test:e2e              # run browser smoke tests (Playwright, chromium; separate from CI gate)
 npm run links                 # check links locally (lychee, separate from CI gate)
 ./validate.sh                 # run the FULL gate locally: shell, format, lint, tests, xml, csp, og-image, svg
 ./validate.sh --clean         # run with a clean install (npm ci) first, matching CI exactly
@@ -40,16 +41,19 @@ shellcheck shfmt actionlint` plus `npm install` for the npm-only tools: Prettier
 ESLint, stylelint, markdownlint-cli2 and svgo; xmllint ships with macOS/Xcode but
 can also be installed via `brew install libxml2`). `validate.sh` skips any brew
 CLI that isn't installed (with a notice — CI still enforces it) so it runs on a
-fresh checkout; Node and npm are the only hard requirements. Link checking is
-separate and non-gating — the `links` workflow runs lychee on pull requests and a
-weekly schedule. The dev dependencies that need `package.json` are ESLint (plus
-`@eslint/js`, `@eslint/json`, `eslint-plugin-html` and `globals`), stylelint
-(plus `stylelint-config-standard`), markdownlint-cli2, Prettier, svgo, and jsdom
-(the DOM harness the wiring tests run against). The CI guards and the pure-logic
-unit tests use only Node's standard library; only the DOM-wiring tests
+fresh checkout; Node and npm are the only hard requirements. Link checking and
+the browser smoke tests are separate and non-gating — the `links` workflow runs
+lychee on pull requests and a weekly schedule, and the `e2e` workflow runs the
+Playwright specs (a browser download) on pull requests and pushes to `main`.
+Deploys gate only on `validate`, not on either of these. The dev dependencies
+that need `package.json` are ESLint (plus `@eslint/js`, `@eslint/json`,
+`eslint-plugin-html` and `globals`), stylelint (plus `stylelint-config-standard`),
+markdownlint-cli2, Prettier, svgo, jsdom (the DOM harness the wiring tests run
+against) and `@playwright/test` (the browser smoke tests). The CI guards and the
+pure-logic unit tests use only Node's standard library; only the DOM-wiring tests
 (`test/terminalDom.test.js`, `test/themeToggleDom.test.js`, via
-`test/helpers/dom.js`) need jsdom, and the site itself still ships no
-dependencies. Prettier uses its defaults; keep the Prettier, shfmt, actionlint
+`test/helpers/dom.js`) need jsdom, only the `e2e/` specs need Playwright, and the
+site itself still ships no dependencies. Prettier uses its defaults; keep the Prettier, shfmt, actionlint
 and Node versions pinned in `.tool-versions` in sync with the project — `validate.sh`
 asserts the shfmt and actionlint versions when present (hard errors on mismatch;
 Node is a warning), while Prettier's version is enforced via the npm lockfile.
@@ -144,9 +148,12 @@ The remaining DOM glue in the two UI modules is thin, but the wiring itself (a
 click, keystroke or storage event mutating the DOM) is covered by jsdom tests
 in `test/terminalDom.test.js` and `test/themeToggleDom.test.js`, which drive the
 modules against a document built from the real `index.html` (see
-`test/helpers/dom.js`). Layout-dependent behaviour — `fitScreen`'s height
-freeze, the ghost-span width fallback, the `ResizeObserver` reflow — has no
-layout under jsdom and is still verified in a real browser.
+`test/helpers/dom.js`). Layout- and paint-dependent behaviour — `fitScreen`'s
+height freeze, the input growing with its content, click-to-focus and the theme
+toggle actually repainting the page — has no layout or computed `color-scheme`
+under jsdom, so it is covered by Playwright browser smoke tests in
+`e2e/terminal.spec.js` (run via `npm run test:e2e`, served by python's
+http.server per `playwright.config.js`).
 
 The page sends a strict Content-Security-Policy **twice**: a `<meta http-equiv>`
 tag in `index.html` and an HTTP header in `.htaccess`. Both are `default-src

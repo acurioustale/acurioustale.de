@@ -36,6 +36,15 @@ export default [
     },
   },
 
+  // Playwright: the config and specs run in Node, but their page.evaluate
+  // callbacks run in the browser, so allow both global sets.
+  {
+    files: ["e2e/**/*.js", "playwright.config.js"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
+
   // JSON config/data files (duplicate keys, unsafe values, etc.).
   {
     files: ["**/*.json"],
