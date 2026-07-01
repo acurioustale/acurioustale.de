@@ -7,10 +7,19 @@ reviewed, diffed and restored.
 
 ## `rsync-jail-acurioustale.sh`
 
-The forced command that jails the CI deploy key on the host. It is wired into
-the `web4186` account's `~/.ssh/authorized_keys` as
-`command="bin/rsync-jail-acurioustale.sh"` and permits only an `rsync` _push_
-into `html/acurioustale.de/` - no shell, no pull, no path traversal. This is
+The forced command that jails the CI deploy key on the host. It is pinned to
+the deploy key in the `web4186` account's `~/.ssh/authorized_keys`, with
+`restrict` (OpenSSH's umbrella flag disabling the pty, agent, port and X11
+forwarding):
+
+```text
+command="/home/www/web4186/bin/rsync-jail-acurioustale.sh",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIplv+1s809gpA/xjDx9HFbu839B2OWFI6PFEhYJzR82 github-actions-deploy@acurioustale.de
+```
+
+The script permits only an `rsync` _push_ into `html/acurioustale.de/` - no
+shell, no pull, no path traversal. The destination is pinned to that
+subdirectory rather than the account root because the host account is shared
+with other sites' deploy keys, each confined to its own jail script. This is
 what makes the `DEPLOY_SSH_KEY` secret harmless if leaked (see the README
 "Deployment" section).
 
