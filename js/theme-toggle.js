@@ -24,11 +24,11 @@ if (bar) {
     return nextTheme(m, prefersLight.matches);
   }
 
-  function apply(to) {
-    try {
-      if (to === "auto") localStorage.removeItem("theme");
-      else localStorage.setItem("theme", to);
-    } catch {}
+  // Force the colour scheme: set (or clear) the data-theme override and keep the
+  // two <meta name="theme-color"> media attributes in sync. Pure DOM, no persist,
+  // so it can be reused to reflect an already-stored choice (on load, or from
+  // another tab) without a redundant write back to localStorage.
+  function setScheme(to) {
     if (to === "auto") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", to);
 
@@ -47,6 +47,20 @@ if (bar) {
         darkMeta.setAttribute("media", to === "dark" ? "all" : "not all");
       }
     }
+  }
+
+  // Persist the choice: "auto" clears the override, light/dark store it.
+  function persist(to) {
+    try {
+      if (to === "auto") localStorage.removeItem("theme");
+      else localStorage.setItem("theme", to);
+    } catch {}
+  }
+
+  // Apply a user choice: persist it and force the scheme.
+  function apply(to) {
+    persist(to);
+    setScheme(to);
   }
 
   const btn = document.createElement("button");
@@ -73,18 +87,20 @@ if (bar) {
 
   bar.appendChild(btn);
 
+  // A stored override is already in localStorage (the inline guard applied it
+  // pre-paint); sync the metas to match without re-persisting the same value.
   if (mode() !== "auto") {
-    apply(mode());
+    setScheme(mode());
   }
   render();
 
-  // When another tab changes the theme, mirror it here. Delegate to apply() so
-  // the <meta name="theme-color"> tags stay in sync too, not just data-theme.
-  // apply() re-persists the value, but the shared localStorage already holds it
-  // by the time this fires, so the write is a no-op and can't loop.
+  // When another tab changes the theme, mirror it here via setScheme so the
+  // <meta name="theme-color"> tags stay in sync too, not just data-theme. The
+  // originating tab already persisted the value, so we only reflect it — no
+  // write back, no cross-tab storage-event loop.
   window.addEventListener("storage", function (e) {
     if (e.key === "theme") {
-      apply(normalizeMode(e.newValue));
+      setScheme(normalizeMode(e.newValue));
       render();
     }
   });
