@@ -175,11 +175,21 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
   let historyIndex = 0;
   let currentBuffer = "";
 
+  // Cap scrollback growth so long sessions don't bloat the DOM. Called from
+  // every path that appends to the log, including a bare Enter, so repeatedly
+  // submitting an empty prompt can't grow the DOM past the cap either.
+  function capLog() {
+    while (log.children.length > MAX_LOG_NODES) {
+      log.removeChild(log.firstElementChild);
+    }
+  }
+
   function run() {
     const raw = input.value;
     const rawCmd = raw.trim();
     if (!rawCmd) {
       echoLine(raw);
+      capLog();
       input.value = "";
       size();
       screen.scrollTop = screen.scrollHeight;
@@ -224,10 +234,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       replyLine(reply(rawCmd));
     }
 
-    // Cap scrollback growth so long sessions don't bloat the DOM.
-    while (log.children.length > MAX_LOG_NODES) {
-      log.removeChild(log.firstElementChild);
-    }
+    capLog();
 
     input.value = "";
     size();
