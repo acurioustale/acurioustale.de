@@ -38,7 +38,7 @@ help text) is factored into `js/theme.js` and `js/commands.js` and unit-tested i
 ├── CLAUDE.md            ← guidance for AI coding assistants
 ├── GEMINI.md            ← symlink to CLAUDE.md (same guidance, for Gemini)
 ├── SECURITY.md          ← security policy: how to report a vulnerability
-├── package.json         ← npm-only dev tools (ESLint, stylelint, markdownlint-cli2, Prettier, svgo, jsdom, Playwright)
+├── package.json         ← npm-only dev tools (ESLint, stylelint, markdownlint-cli2, Prettier, svgo, jsdom, fast-check, Playwright)
 ├── eslint.config.mjs    ← ESLint flat config (JS and JSON linting)
 ├── svgo.config.mjs      ← svgo configuration for SVG optimisation
 ├── playwright.config.js ← Playwright config for the e2e smoke tests
@@ -62,7 +62,7 @@ then run the script:
 
 ```bash
 brew install vnu shellcheck shfmt actionlint   # one-time
-npm install                                    # one-time (ESLint, stylelint, markdownlint-cli2, Prettier, svgo, jsdom, Playwright)
+npm install                                    # one-time (ESLint, stylelint, markdownlint-cli2, Prettier, svgo, jsdom, fast-check, Playwright)
 ./validate.sh
 ```
 
@@ -76,7 +76,9 @@ Node is also pinned in `.tool-versions`; a version mismatch there emits a warnin
 
 The tests come in layers. `npm test` (`node --test`) runs the pure-logic unit
 tests plus jsdom DOM-wiring tests that drive the modules against a document built
-from the real `index.html`. The `validate.sh` gate runs the same suite through
+from the real `index.html`. The pure-logic layer pairs example-based tests with
+`fast-check` property tests (`test/properties.test.js`) that assert the
+invariants across the whole input space. The `validate.sh` gate runs the same suite through
 `npm run coverage` (`node --test --experimental-test-coverage`), which fails if
 the unit-tested surface drops below the pinned thresholds (lines 98%, branches
 95%, functions 100%); the two DOM-glue modules are excluded from that accounting

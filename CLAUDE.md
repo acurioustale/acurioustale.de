@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The personal landing page for [acurioustale.de](https://acurioustale.de): a single
 static `index.html` styled as a terminal "whoami" card, with one stylesheet and
 two small ES modules in `js/`. No framework and no build step; the deployed site
-ships no dependencies (the only npm packages are dev-time linters plus the jsdom
-and Playwright test harnesses, see below). The
+ships no dependencies (the only npm packages are dev-time linters plus the jsdom,
+fast-check and Playwright test harnesses, see below). The
 `js/` modules are plain ES modules served as-is and loaded with `type="module"` —
 no bundling.
 
@@ -51,8 +51,10 @@ Deploys gate only on `validate`, not on either of these. The dev dependencies
 that need `package.json` are ESLint (plus `@eslint/js`, `@eslint/json`,
 `eslint-plugin-html` and `globals`), stylelint (plus `stylelint-config-standard`),
 markdownlint-cli2, Prettier, svgo, jsdom (the DOM harness the wiring tests run
-against) and `@playwright/test` (the browser smoke tests). The CI guards and the
-pure-logic unit tests use only Node's standard library; only the DOM-wiring tests
+against), `fast-check` (the property-based tests) and `@playwright/test` (the
+browser smoke tests). The CI guards use only Node's standard library; the
+pure-logic unit tests additionally use `fast-check` for the property tests in
+`test/properties.test.js`; only the DOM-wiring tests
 (`test/terminalDom.test.js`, `test/themeToggleDom.test.js`, via
 `test/helpers/dom.js`) need jsdom, only the `e2e/` specs need Playwright, and the
 site itself still ships no dependencies. Prettier uses its defaults; keep the Prettier, shfmt, actionlint
@@ -150,7 +152,13 @@ scrollback cap, history-recall arithmetic, focus-steal guard and the
 width-change re-freeze guard lifted out of the event handlers) — and exercised
 by `test/theme.test.js`, `test/commands.test.js`,
 `test/terminalUi.test.js`, `test/themeColor.test.js`,
-`test/themeFallback.test.js` and `test/themeGuard.test.js`.
+`test/themeFallback.test.js` and `test/themeGuard.test.js`. On top of those
+example-based tests, `test/properties.test.js` asserts the invariants across the
+whole input space with `fast-check` — `nextTheme` is a closed three-way cycle,
+`formatUptime` never goes negative and round-trips to elapsed minutes,
+`recallHistory` keeps its index in bounds for any key sequence, and `capLimit`
+stays a non-negative bound — so a regression that slips past a hand-picked
+example still fails the build.
 The remaining DOM glue in the two UI modules is thin, but the wiring itself (a
 click, keystroke or storage event mutating the DOM) is covered by jsdom tests
 in `test/terminalDom.test.js` and `test/themeToggleDom.test.js`, which drive the
