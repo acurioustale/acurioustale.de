@@ -169,7 +169,8 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
 
   const BLOCKS = Object.assign(Object.create(null), STATIC_BLOCKS);
 
-  const MAX_HISTORY = 100;
+  const MAX_CMD_HISTORY = 100; // keyboard ↑/↓ recall depth (command entries)
+  const MAX_LOG_NODES = 200; // DOM scrollback nodes before pruning
   const history = [];
   let historyIndex = 0;
   let currentBuffer = "";
@@ -189,7 +190,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     // "  clear" and "clear" are the same entry, and recall replays what ran.
     if (history[history.length - 1] !== rawCmd) {
       history.push(rawCmd);
-      if (history.length > MAX_HISTORY) {
+      if (history.length > MAX_CMD_HISTORY) {
         history.shift();
       }
     }
@@ -224,7 +225,7 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     }
 
     // Cap scrollback growth so long sessions don't bloat the DOM.
-    while (log.children.length > MAX_HISTORY) {
+    while (log.children.length > MAX_LOG_NODES) {
       log.removeChild(log.firstElementChild);
     }
 
