@@ -140,10 +140,9 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     const node = document.querySelector(selector);
     if (!node) return;
     const clone = node.cloneNode(true);
-    // Demote any cloned <h1> so replayed output doesn't add duplicate
+    // Demote every cloned <h1> so replayed output doesn't add duplicate
     // top-level headings to the document outline.
-    const heading = clone.querySelector("h1");
-    if (heading) {
+    for (const heading of clone.querySelectorAll("h1")) {
       const p = document.createElement("p");
       p.className = heading.className;
       p.textContent = heading.textContent;
