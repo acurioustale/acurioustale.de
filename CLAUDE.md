@@ -115,7 +115,11 @@ Keep these consistent: the `localStorage` key is `"theme"` with values
 attribute on `<html>`. The two `<meta name="theme-color">` values (one per
 `prefers-color-scheme`) must equal the CSS `--page-bg` light/dark sides;
 `test/themeColor.test.js` enforces that so the browser chrome can't drift from
-the page background. `test/themeGuard.test.js` verifies the inline pre-paint
+the page background. `theme-toggle.js` also locates those two metas by hardcoding
+their exact `content=` hex into its `querySelector` calls; `test/themeToggleMeta.test.js`
+binds those selectors back to the metas so renaming the palette can't silently
+break the toggle's chrome-tint sync (the guarded lookup would otherwise just skip
+the update). `test/themeGuard.test.js` verifies the inline pre-paint
 guard stays consistent with the module-based `normalizeMode()` by extracting and
 evaluating the inline scripts (via `tools/inline-scripts.mjs`).
 
