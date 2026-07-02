@@ -135,15 +135,17 @@ jobs:
           npm run check:csp
           npm run check:og
 
-      # svgo keeps the SVGs optimised; the check fails if either would change.
-      # Write to a temp file rather than piping, so a svgo crash (bad fetch,
-      # config error) is distinguished from a genuinely unoptimised SVG instead
-      # of pipefail turning both into the same misleading message. Mirrors
-      # validate.sh.
+      # svgo keeps every tracked SVG optimised; the check fails if any would
+      # change. SVGs are discovered with git ls-files (like the shell-lint step)
+      # so a newly added one is checked too. Write to a temp file rather than
+      # piping, so a svgo crash (bad fetch, config error) is distinguished from a
+      # genuinely unoptimised SVG instead of pipefail turning both into the same
+      # misleading message. Mirrors validate.sh.
       - name: Check SVG optimisation
         run: |
           out="$RUNNER_TEMP/svgo-out.svg"
-          for f in assets/favicon.svg og-image.src.svg; do
+          mapfile -t svg_files < <(git ls-files '*.svg')
+          for f in "${svg_files[@]}"; do
             if ! npx svgo --config svgo.config.mjs -i "$f" -o "$out" >/dev/null; then
               echo "svgo failed to process $f"
               exit 1
