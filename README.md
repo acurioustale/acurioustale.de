@@ -171,11 +171,13 @@ To deploy by hand instead (uses your own SSH access), run:
 ./deploy.sh --dry-run  # preview what would change
 ```
 
-The `--delete` flag keeps the deployed `css/`, `js/` and `assets/` directories
-in sync — files removed locally are removed on the server too. Only the files
-listed above (`index.html`, `.htaccess`, `robots.txt`, `sitemap.xml`,
-`humans.txt`, `css/`, `js/` and `assets/`) are pushed, so unrelated files
-elsewhere in the web root are left untouched.
+The `--delete` flag makes `html/acurioustale.de/` an exact mirror of the staged
+deploy set. Because the staging directory holds only the files listed above,
+rsync removes anything else it finds in the target on the host — both files
+dropped from the set locally and any file placed there out of band. Keep the
+deploy target to the site alone: a file hand-placed in it (an ACME challenge, a
+search-console verification file) is deleted on the next deploy unless it's
+added to the deploy set.
 
 Two invariants tie the deploy to the jail. First, `deploy.sh` must stage the
 full deploy set (the `DEPLOY_ASSETS` array): a file added to the site but left
