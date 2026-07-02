@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
+import { JSDOM } from "jsdom";
 
 import { normalizeMode } from "../js/theme.js";
 import { inlineScripts } from "../tools/inline-scripts.mjs";
@@ -45,6 +46,7 @@ function guardOverride(stored) {
           if (name === "data-theme") applied = value;
         },
       },
+      querySelector: () => null,
     },
   });
   return applied;
@@ -85,4 +87,47 @@ test("the inline guard applies an override iff normalizeMode() does, with the sa
       );
     }
   }
+});
+
+// The guard must also point the two theme-color metas at the forced scheme so
+// the browser-chrome tint matches from first paint (theme-toggle.js only fixes
+// this up once it loads). Run the real guard against a DOM built from the
+// shipping index.html and check the actual metas — this also binds the guard's
+// media-based meta selectors to the shipping markup: if either stops matching,
+// the media would stay on its prefers query and these fail.
+function runGuardInDom(stored) {
+  const { window } = new JSDOM(html);
+  vm.runInNewContext(guardSource, {
+    localStorage: { getItem: (key) => (key === "theme" ? stored : null) },
+    document: window.document,
+  });
+  return window.document;
+}
+
+const lightMeta = 'meta[name="theme-color"][content="#e8e6df"]';
+const darkMeta = 'meta[name="theme-color"][content="#0e0f10"]';
+
+test("the inline guard points the theme-color metas at a forced scheme", () => {
+  for (const [stored, light, dark] of [
+    ["dark", "not all", "all"],
+    ["light", "all", "not all"],
+  ]) {
+    const doc = runGuardInDom(stored);
+    assert.equal(doc.documentElement.getAttribute("data-theme"), stored);
+    assert.equal(doc.querySelector(lightMeta).getAttribute("media"), light);
+    assert.equal(doc.querySelector(darkMeta).getAttribute("media"), dark);
+  }
+});
+
+test("with no override the guard leaves the metas on prefers-color-scheme", () => {
+  const doc = runGuardInDom(null);
+  assert.equal(doc.documentElement.hasAttribute("data-theme"), false);
+  assert.equal(
+    doc.querySelector(lightMeta).getAttribute("media"),
+    "(prefers-color-scheme: light)",
+  );
+  assert.equal(
+    doc.querySelector(darkMeta).getAttribute("media"),
+    "(prefers-color-scheme: dark)",
+  );
 });

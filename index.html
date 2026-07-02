@@ -12,7 +12,7 @@
          frame-ancestors is ignored in a meta CSP and is set at the host. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-hl8MkVDxyJok1M6f1lpuyt9EwXqjBZ2mwv6d3otvj8c='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self' 'sha256-EGdQzZVhEVs25DC0OCkdb3JdhzGFnTzUQuWHMzw6U/U='; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
     />
 
     <title>Markus Spitzner — me@acurioustale.de</title>
@@ -101,12 +101,28 @@
       }
     </script>
     <script>
-      // Apply a saved theme before first paint to avoid a flash.
+      // Apply a saved theme before first paint to avoid a flash, and point the
+      // two theme-color metas at the forced scheme so the browser-chrome tint
+      // matches the page from the first paint. Without this the metas keep
+      // following prefers-color-scheme until theme-toggle.js loads (and forever
+      // if it never does). The metas are found by their media attribute — no
+      // colour hardcoded here — because at this point they still hold their
+      // authored prefers-color-scheme queries.
       (function () {
         try {
           const t = localStorage.getItem("theme");
           if (t === "light" || t === "dark") {
             document.documentElement.setAttribute("data-theme", t);
+            const light = document.querySelector(
+              'meta[name="theme-color"][media*="light"]',
+            );
+            const dark = document.querySelector(
+              'meta[name="theme-color"][media*="dark"]',
+            );
+            if (light && dark) {
+              light.setAttribute("media", t === "light" ? "all" : "not all");
+              dark.setAttribute("media", t === "dark" ? "all" : "not all");
+            }
           }
         } catch {}
       })();
