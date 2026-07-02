@@ -20,11 +20,20 @@ command="/home/www/web4186/bin/rsync-jail-acurioustale.sh",restrict ssh-ed25519 
 ```
 
 The script permits only an `rsync` _push_ into `html/acurioustale.de/` - no
-shell, no pull, no path traversal. The destination is pinned to that
-subdirectory rather than the account root because the host account is shared
-with other sites' deploy keys, each confined to its own jail script. This is
-what makes the `DEPLOY_SSH_KEY` secret harmless if leaked (see the README
-"Deployment" section).
+shell, no pull, no path traversal. It also allowlists the rsync options the
+deploy actually sends (`--delete` and `--chmod=...`, plus the short-flag
+bundle), refusing any other long option so a key holder can't smuggle a
+dangerous receiver option (`--rsync-path`, `--files-from`, ...) past the mode
+and destination checks, and it injects `--munge-links` so a symlink written into
+the web root can't resolve outside the jail when Apache serves it. The
+destination is pinned to that subdirectory rather than the account root because
+the host account is shared with other sites' deploy keys, each confined to its
+own jail script. This is what makes the `DEPLOY_SSH_KEY` secret harmless if
+leaked (see the README "Deployment" section).
+
+Because the server-side option bundle rsync generates varies by version, verify
+a change to the option allowlist against the host before installing it: run one
+real `./deploy.sh --dry-run` and confirm it is not rejected.
 
 **Reviewed source, manually installed by an admin; the server file is
 authoritative.** CI does not install this file. Changing the jail's behaviour
