@@ -165,6 +165,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Set Node up before writing the deploy key, so no action step runs while
+      # the key is on disk. deploy.sh needs node to stamp the timestamp but not
+      # SSH, and Configure SSH needs neither, so the order is free to choose.
+      # No npm cache: the script only uses node's stdlib, with no install step.
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".tool-versions"
+
       - name: Configure SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -190,14 +199,6 @@ jobs:
             echo "  UserKnownHostsFile ~/.ssh/known_hosts"
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
-
-      # deploy.sh shells out to `node` to stamp the deploy timestamp into
-      # js/commands.js, so this job needs Node on the runner like validate does.
-      # No npm cache: the script only uses node's stdlib, with no install step.
-      - name: Set up Node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".tool-versions"
 
       - name: Deploy
         run: ./deploy.sh ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
