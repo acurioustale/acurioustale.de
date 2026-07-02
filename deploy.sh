@@ -56,8 +56,8 @@ done
 
 # Local cruft that can ride along inside the copied css/js/assets directories
 # but must never reach the web root: macOS metadata and AppleDouble forks
-# (common on mounted volumes), plus editor backups and swapfiles. Defined once
-# and reused so the two rsync invocations below can't drift apart.
+# (common on mounted volumes), plus editor backups and swapfiles. Kept in a
+# named array so the exclude list stays readable next to the rsync call below.
 rsync_excludes=(
 	--exclude='.DS_Store'
 	--exclude='._*'
