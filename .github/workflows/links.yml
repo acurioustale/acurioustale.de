@@ -3,8 +3,19 @@ name: links
 # Link checking is intentionally separate from deploy: external hosts have
 # transient outages, so a broken link should surface on pull requests and a
 # weekly schedule without ever blocking a production deploy.
+# On pull requests, only run when a file lychee actually checks (or its config)
+# changes, so unrelated PRs don't hit external hosts. The weekly schedule still
+# catches links that rot without a file change, and workflow_dispatch runs it by
+# hand; neither is path-filtered.
 on:
   pull_request:
+    paths:
+      - index.html
+      - README.md
+      - CLAUDE.md
+      - SECURITY.md
+      - lychee.toml
+      - .github/workflows/links.yml
   schedule:
     - cron: "0 6 * * 1" # Mondays, 06:00 UTC
   workflow_dispatch:
