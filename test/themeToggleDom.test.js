@@ -73,6 +73,43 @@ test("clicking keeps the two theme-color metas in sync", async () => {
   assert.equal(dark.getAttribute("media"), "(prefers-color-scheme: dark)");
 });
 
+test("a bfcache restore re-syncs the theme from localStorage", async () => {
+  const { document, window } = await loadModule("js/theme-toggle.js");
+  const root = document.documentElement;
+  assert.equal(root.hasAttribute("data-theme"), false); // starts on auto
+
+  // Another tab set "dark" while this page was frozen in the bfcache, so no
+  // storage event reached it — localStorage is ahead of the DOM.
+  window.localStorage.setItem("theme", "dark");
+
+  const pageshow = new window.Event("pageshow");
+  Object.defineProperty(pageshow, "persisted", { value: true });
+  window.dispatchEvent(pageshow);
+
+  assert.equal(
+    root.getAttribute("data-theme"),
+    "dark",
+    "restore re-syncs data-theme",
+  );
+  assert.match(
+    document.querySelector(".theme-toggle").getAttribute("aria-label"),
+    /^Theme: dark/,
+  );
+});
+
+test("a normal load (pageshow not persisted) does not clobber the current theme", async () => {
+  const { document, window } = await loadModule("js/theme-toggle.js");
+  const root = document.documentElement;
+  document.querySelector(".theme-toggle").click(); // → light (persisted)
+  assert.equal(root.getAttribute("data-theme"), "light");
+
+  // A non-persisted pageshow (ordinary navigation) must be a no-op here.
+  const pageshow = new window.Event("pageshow");
+  Object.defineProperty(pageshow, "persisted", { value: false });
+  window.dispatchEvent(pageshow);
+  assert.equal(root.getAttribute("data-theme"), "light");
+});
+
 test("a storage event from another tab mirrors the scheme without writing back", async () => {
   const { document, window } = await loadModule("js/theme-toggle.js");
   const root = document.documentElement;
