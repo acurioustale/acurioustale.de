@@ -7,10 +7,34 @@ name: e2e
 # link checking, non-blocking for deploys: it downloads a browser and shouldn't
 # fail a release on a flake. Deploys gate on `validate` (see deploy.yml), not on
 # this.
+# Only run when something the smoke tests actually exercise changes (the page,
+# its styles/scripts, the specs, the Playwright config or its deps). Docs-only
+# changes skip the browser download. Safe because this is non-gating for deploys;
+# workflow_dispatch stays available to run it by hand regardless.
 on:
   pull_request:
+    paths:
+      - index.html
+      - css/**
+      - js/**
+      - e2e/**
+      - playwright.config.js
+      - package.json
+      - package-lock.json
+      - .tool-versions
+      - .github/workflows/e2e.yml
   push:
     branches: [main]
+    paths:
+      - index.html
+      - css/**
+      - js/**
+      - e2e/**
+      - playwright.config.js
+      - package.json
+      - package-lock.json
+      - .tool-versions
+      - .github/workflows/e2e.yml
   workflow_dispatch:
 
 permissions:
