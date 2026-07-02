@@ -173,7 +173,12 @@ http.server per `playwright.config.js`).
 
 `npm run coverage` runs the same `node --test` suite with
 `--experimental-test-coverage` and fails if the unit-tested surface drops below
-the pinned thresholds (lines 98%, branches 95%, functions 100%). This is the
+the pinned thresholds (lines, branches and functions all 100%). Treat those
+thresholds as a ratchet: the whole gated surface currently sits at 100%, so the
+gate is pinned there — raise a threshold as coverage climbs, never lower one to
+make a change fit (add the missing test instead). Node enforces the thresholds
+globally rather than per file, but with every gated module at 100% each one is
+pinned individually too, stronger than a single-file floor. This is the
 test step `validate.sh` and CI run — plain `npm test` stays available for fast
 local iteration without the gate. The two DOM-glue modules (`js/terminal.js`,
 `js/theme-toggle.js`) are excluded from the coverage accounting because their
