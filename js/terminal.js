@@ -278,7 +278,10 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     if (e.target.closest("a")) return;
     if (window.getSelection && window.getSelection().toString().length > 0)
       return;
-    input.focus();
+    // preventScroll like the load focus: without it, focusing the prompt (at the
+    // bottom of the frozen screen) yanks the scrollback down, discarding where
+    // the user had scrolled to.
+    input.focus({ preventScroll: true });
   });
 
   // Focus on load so typing works right away.
