@@ -22,11 +22,13 @@ let importCounter = 0;
 
 // Build a fresh DOM, wire up the globals, and import the module so its top-level
 // setup runs. Returns the window and document for assertions.
-//   pointerFine   value reported for the "(pointer: fine)" query (terminal gate)
-//   prefersLight  whether the OS prefers light (drives the theme cycle order)
+//   pointerFine       value reported for the "(pointer: fine)" query (terminal gate)
+//   prefersLight      whether the OS prefers light (drives the theme cycle order)
+//   legacyMatchMedia  omit addEventListener from the MediaQueryList to model
+//                     Safari ≤13, whose MQL only has the deprecated addListener
 export async function loadModule(
   relPath,
-  { pointerFine = true, prefersLight = false } = {},
+  { pointerFine = true, prefersLight = false, legacyMatchMedia = false } = {},
 ) {
   const dom = new JSDOM(html, {
     url: "https://acurioustale.de/",
@@ -35,23 +37,29 @@ export async function loadModule(
   const { window } = dom;
 
   // jsdom ships no matchMedia; the modules query pointer type and colour scheme.
-  window.matchMedia = (query) => ({
-    matches: query.includes("pointer: fine")
-      ? pointerFine
-      : query.includes("prefers-color-scheme: light")
-        ? prefersLight
-        : query.includes("prefers-color-scheme: dark")
-          ? !prefersLight
-          : false,
-    media: query,
-    addEventListener() {},
-    removeEventListener() {},
-    addListener() {},
-    removeListener() {},
-    dispatchEvent() {
-      return false;
-    },
-  });
+  window.matchMedia = (query) => {
+    const mql = {
+      matches: query.includes("pointer: fine")
+        ? pointerFine
+        : query.includes("prefers-color-scheme: light")
+          ? prefersLight
+          : query.includes("prefers-color-scheme: dark")
+            ? !prefersLight
+            : false,
+      media: query,
+      addListener() {},
+      removeListener() {},
+      dispatchEvent() {
+        return false;
+      },
+    };
+    // Modern browsers expose both APIs; Safari ≤13 only the deprecated one.
+    if (!legacyMatchMedia) {
+      mql.addEventListener = () => {};
+      mql.removeEventListener = () => {};
+    }
+    return mql;
+  };
 
   // The browser modules read these as bare identifiers (window.*, document,
   // localStorage). Leave CSS unset so terminal.js exercises its ghost-span

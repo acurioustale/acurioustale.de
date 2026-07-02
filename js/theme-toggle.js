@@ -78,8 +78,15 @@ if (bar) {
 
   // The label's "switch to" target is derived from the OS preference (it sets
   // the cycle order), so re-render on every OS change in any mode — not just
-  // auto, where the glyph also follows the OS.
-  prefersLight.addEventListener("change", render);
+  // auto, where the glyph also follows the OS. Prefer addEventListener; fall
+  // back to the deprecated addListener for Safari ≤13, whose MediaQueryList
+  // predates it — an unguarded call there throws and aborts the whole toggle
+  // (the button is never appended), the same class of API the terminal guards.
+  if (prefersLight.addEventListener) {
+    prefersLight.addEventListener("change", render);
+  } else if (prefersLight.addListener) {
+    prefersLight.addListener(render);
+  }
 
   bar.appendChild(btn);
 

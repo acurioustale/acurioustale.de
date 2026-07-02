@@ -15,6 +15,17 @@ test("injects a theme toggle button into the titlebar", async () => {
   assert.match(btn.getAttribute("aria-label"), /^Theme: auto/);
 });
 
+test("still injects the toggle when the MediaQueryList lacks addEventListener (Safari ≤13)", async () => {
+  const { document } = await loadModule("js/theme-toggle.js", {
+    legacyMatchMedia: true,
+  });
+  const btn = document.querySelector(".titlebar .theme-toggle");
+  assert.ok(
+    btn,
+    "the toggle must still be injected when only the deprecated addListener exists",
+  );
+});
+
 test("clicking cycles auto → light → dark → auto and persists each step", async () => {
   const { document, window } = await loadModule("js/theme-toggle.js", {
     prefersLight: false,
