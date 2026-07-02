@@ -14,8 +14,12 @@
 node_modules/
 .npm
 .eslintcache
+.stylelintcache
 *.log
 *.tgz
+
+# Link checker (lychee runs with cache = true; see lychee.toml)
+.lycheecache
 
 # Playwright browser smoke tests (artifacts, not the specs)
 /test-results/
