@@ -148,9 +148,15 @@ step "Checking SVG optimisation (svgo)"
 # Run svgo into a temp file so a svgo crash (bad fetch, config error) is
 # distinguished from a genuinely unoptimised SVG, instead of pipefail turning
 # both into the same misleading "not optimised" message.
+# Discover every tracked SVG (git ls-files), like the shell-script lint above,
+# so a newly added SVG is optimisation-checked too instead of silently skipped.
+svg_files=()
+while IFS= read -r file; do
+	svg_files+=("$file")
+done < <(git ls-files '*.svg')
 svgo_out="$(mktemp)"
 trap 'rm -f "$svgo_out"' EXIT
-for f in assets/favicon.svg og-image.src.svg; do
+for f in "${svg_files[@]}"; do
 	if ! npx svgo --config svgo.config.mjs -i "$f" -o "$svgo_out" >/dev/null; then
 		echo "  svgo failed to process $f"
 		exit 1
