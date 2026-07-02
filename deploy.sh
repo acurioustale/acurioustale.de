@@ -66,8 +66,8 @@ rsync_excludes=(
 	--exclude='*~'
 )
 
-if [[ "${#rsync_args[@]}" -gt 0 ]]; then
-	rsync -avz --delete "${rsync_excludes[@]}" --chmod=D755,F644 "${rsync_args[@]}" "$stage"/ "${REMOTE}:${TARGET}"
-else
-	rsync -avz --delete "${rsync_excludes[@]}" --chmod=D755,F644 "$stage"/ "${REMOTE}:${TARGET}"
-fi
+# One invocation for both the dry-run and real deploys so their flags and
+# endpoints can't drift. ${rsync_args[@]+"..."} expands to nothing when the
+# array is empty, staying safe under `set -u` on bash 3.2 (macOS default).
+rsync -avz --delete "${rsync_excludes[@]}" --chmod=D755,F644 \
+	${rsync_args[@]+"${rsync_args[@]}"} "$stage"/ "${REMOTE}:${TARGET}"
