@@ -194,6 +194,10 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       capLog();
       input.value = "";
       size();
+      // A bare Enter still ends recall: reset the cursor to the live prompt so
+      // the next ArrowUp recalls the most recent command, as a real shell does.
+      historyIndex = history.length;
+      currentBuffer = "";
       screen.scrollTop = screen.scrollHeight;
       return;
     }

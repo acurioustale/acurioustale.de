@@ -107,6 +107,27 @@ test("Arrow keys recall previous commands", async () => {
   assert.equal(input.value, "uptime");
 });
 
+test("a bare Enter resets recall to the most recent command", async () => {
+  const { window, document } = await loadModule("js/terminal.js");
+  const input = document.querySelector(".cmd-input");
+
+  submit(window, input, "date");
+  submit(window, input, "uptime");
+
+  // Recall up to "uptime", clear the field, then submit an empty line.
+  keydown(window, input, "ArrowUp");
+  assert.equal(input.value, "uptime");
+  submit(window, input, ""); // bare Enter
+
+  // Recall must return to the latest command, not resume mid-history at "date".
+  keydown(window, input, "ArrowUp");
+  assert.equal(
+    input.value,
+    "uptime",
+    "ArrowUp after a bare Enter recalls the most recent command",
+  );
+});
+
 test("scrollback is capped so a long session can't grow the DOM unbounded", async () => {
   const { window, document } = await loadModule("js/terminal.js");
   const input = document.querySelector(".cmd-input");
