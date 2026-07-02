@@ -107,4 +107,19 @@ if (bar) {
       render();
     }
   });
+
+  // A page restored from the back/forward cache never saw the storage events
+  // fired while it was frozen, so its theme can lag another tab's change (and
+  // the next toggle would then cycle from a stale mode). Re-read localStorage
+  // and re-apply on bfcache restore; a normal load (persisted false) is already
+  // handled above, so skip it.
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    let stored = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch {}
+    setScheme(normalizeMode(stored));
+    render();
+  });
 }
