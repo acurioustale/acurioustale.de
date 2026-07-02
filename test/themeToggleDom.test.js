@@ -135,3 +135,25 @@ test("a storage event from another tab mirrors the scheme without writing back",
   );
   assert.equal(root.hasAttribute("data-theme"), false);
 });
+
+test("clearing site storage in another tab (key null) resets to auto", async () => {
+  const { document, window } = await loadModule("js/theme-toggle.js");
+  const root = document.documentElement;
+
+  // Mirror a dark override first.
+  window.dispatchEvent(
+    new window.StorageEvent("storage", { key: "theme", newValue: "dark" }),
+  );
+  assert.equal(root.getAttribute("data-theme"), "dark");
+
+  // localStorage.clear() in another tab fires a storage event with key === null
+  // (not "theme"), so the handler must still reset rather than ignore it.
+  window.dispatchEvent(
+    new window.StorageEvent("storage", { key: null, newValue: null }),
+  );
+  assert.equal(
+    root.hasAttribute("data-theme"),
+    false,
+    "clear() must hand control back to the OS",
+  );
+});
