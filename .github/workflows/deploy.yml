@@ -69,12 +69,18 @@ jobs:
       - name: Install npm tooling
         run: npm ci
 
+      # Read the pins with an exact first-field match (mirroring validate.sh's
+      # tool_version helper) and `exit` after the first hit, so a malformed or
+      # hostile .tool-versions can neither prefix-match the wrong tool nor emit
+      # extra GITHUB_OUTPUT lines. The values still flow into later steps only
+      # through env vars (never interpolated into a run: script), so a value
+      # can't be parsed as shell.
       - name: Read tool versions
         id: versions
         run: |
           {
-            echo "shfmt=$(awk '/^shfmt / {print $2}' .tool-versions)"
-            echo "actionlint=$(awk '/^actionlint / {print $2}' .tool-versions)"
+            echo "shfmt=$(awk '$1 == "shfmt" { print $2; exit }' .tool-versions)"
+            echo "actionlint=$(awk '$1 == "actionlint" { print $2; exit }' .tool-versions)"
           } >> "$GITHUB_OUTPUT"
 
       # Pinned to the version run locally so CI and developers agree on style.
@@ -86,20 +92,24 @@ jobs:
       # tracked shell script with git ls-files (mirroring validate.sh) so the
       # ops/ rsync-jail script is linted alongside deploy.sh and validate.sh.
       - name: Lint and format-check shell scripts
+        env:
+          SHFMT_VERSION: ${{ steps.versions.outputs.shfmt }}
         run: |
           mapfile -t sh_files < <(git ls-files '*.sh')
           shellcheck "${sh_files[@]}"
           curl -sSfL -o "$RUNNER_TEMP/shfmt" \
-            https://github.com/mvdan/sh/releases/download/v${{ steps.versions.outputs.shfmt }}/shfmt_v${{ steps.versions.outputs.shfmt }}_linux_amd64
+            "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
           chmod +x "$RUNNER_TEMP/shfmt"
           "$RUNNER_TEMP/shfmt" -d "${sh_files[@]}"
 
       # actionlint validates the workflow itself and runs ShellCheck over the
       # embedded run scripts. Pinned static binary, no repo dependencies.
       - name: Lint workflows (actionlint)
+        env:
+          ACTIONLINT_VERSION: ${{ steps.versions.outputs.actionlint }}
         run: |
           curl -sSfL -o "$RUNNER_TEMP/actionlint.tar.gz" \
-            https://github.com/rhysd/actionlint/releases/download/v${{ steps.versions.outputs.actionlint }}/actionlint_${{ steps.versions.outputs.actionlint }}_linux_amd64.tar.gz
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
