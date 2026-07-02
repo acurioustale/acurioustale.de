@@ -4,12 +4,7 @@ import * as fc from "fast-check";
 
 import { nextTheme, normalizeMode, metaMediaFor } from "../js/theme.js";
 import { formatUptime } from "../js/commands.js";
-import {
-  capLimit,
-  recallHistory,
-  shouldGrabFocus,
-  shouldRefit,
-} from "../js/terminal-ui.js";
+import { capLimit, recallHistory, shouldRefit } from "../js/terminal-ui.js";
 
 // Property-based coverage for the extracted pure logic. The example-based tests
 // pin the specific cases that are easy to get wrong; these assert the invariants
@@ -144,33 +139,6 @@ test("recallHistory keeps its index in bounds across any key sequence", () => {
           assert.ok(next.index >= 0 && next.index <= entries.length);
           assert.equal(typeof next.value, "string");
           ({ index, buffer, value } = next);
-        }
-      },
-    ),
-  );
-});
-
-// shouldGrabFocus may only steal focus for a bare printable key while focus is
-// passive — never for a real modifier combo (AltGr aside).
-test("shouldGrabFocus only fires for a passive, single-character keystroke", () => {
-  fc.assert(
-    fc.property(
-      fc.record({
-        activePassive: fc.boolean(),
-        metaKey: fc.boolean(),
-        ctrlKey: fc.boolean(),
-        altKey: fc.boolean(),
-        altGraph: fc.boolean(),
-        key: fc.string(),
-      }),
-      (event) => {
-        const grab = shouldGrabFocus(event);
-        assert.equal(typeof grab, "boolean");
-        if (grab) {
-          assert.equal(event.activePassive, true);
-          assert.equal(event.key.length, 1);
-          assert.equal(event.metaKey, false);
-          if (event.ctrlKey || event.altKey) assert.equal(event.altGraph, true);
         }
       },
     ),

@@ -148,9 +148,9 @@ denied", paths with `/` get "No such file or directory", anything else gets
 testing — `theme.js` (`nextTheme()`, `normalizeMode()`, `metaMediaFor()`),
 `commands.js` (`reply()` for the command replies and denials, `help()` for the
 listing, `formatUptime()` for the `uptime` output) and `terminal-ui.js`
-(`capLimit()`, `recallHistory()`, `shouldGrabFocus()`, `shouldRefit()` — the
-scrollback cap, history-recall arithmetic, focus-steal guard and the
-width-change re-freeze guard lifted out of the event handlers) — and exercised
+(`capLimit()`, `recallHistory()`, `shouldRefit()` — the scrollback cap,
+history-recall arithmetic and the width-change re-freeze guard lifted out of the
+event handlers) — and exercised
 by `test/theme.test.js`, `test/commands.test.js`,
 `test/terminalUi.test.js`, `test/themeColor.test.js`,
 `test/themeFallback.test.js` and `test/themeGuard.test.js`. On top of those

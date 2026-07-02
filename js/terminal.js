@@ -1,10 +1,5 @@
 import { reply, help, STATIC_BLOCKS } from "./commands.js";
-import {
-  capLimit,
-  recallHistory,
-  shouldGrabFocus,
-  shouldRefit,
-} from "./terminal-ui.js";
+import { capLimit, recallHistory, shouldRefit } from "./terminal-ui.js";
 
 // Easter egg: turn the static prompt into a real input as progressive
 // enhancement. Without JS the blinking cursor stays and nothing breaks.
@@ -281,39 +276,6 @@ if (last && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
       return;
     input.focus();
   });
-
-  // Type within the terminal to focus the prompt — the first keystroke lands in the
-  // field with no click needed, and refocuses it if focus drifted away.
-  // Ignore shortcuts and non-text keys so browser combos still work, and
-  // never steal focus from a real control: a button activates on Space's
-  // keyup, so grabbing focus on keydown would swallow the theme toggle.
-  // Scoped to the terminal container to prevent trapping screen reader users
-  // who rely on single-key document navigation shortcuts.
-  const terminalNode = document.querySelector(".terminal");
-  if (terminalNode) {
-    terminalNode.addEventListener("keydown", function (e) {
-      const ae = document.activeElement;
-      // Focus is "passive" when it rests on nothing in particular, so grabbing
-      // it can't steal it from a real control (a link, the theme toggle, …).
-      const activePassive =
-        !ae || ae === document.body || ae === document.documentElement;
-      // AltGr (reported as Ctrl+Alt on Windows) produces text on many layouts —
-      // it types @ { } [ ] etc. — so treat it as typing, not a shortcut.
-      const altGraph = !!(e.getModifierState && e.getModifierState("AltGraph"));
-      if (
-        shouldGrabFocus({
-          activePassive,
-          metaKey: e.metaKey,
-          ctrlKey: e.ctrlKey,
-          altKey: e.altKey,
-          altGraph,
-          key: e.key,
-        })
-      ) {
-        input.focus({ preventScroll: true });
-      }
-    });
-  }
 
   // Focus on load so typing works right away.
   input.focus({ preventScroll: true });
