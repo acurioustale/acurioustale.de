@@ -102,7 +102,10 @@ if (bar) {
   // originating tab already persisted the value, so we only reflect it — no
   // write back, no cross-tab storage-event loop.
   window.addEventListener("storage", function (e) {
-    if (e.key === "theme") {
+    // key === null means the whole store was cleared (localStorage.clear());
+    // its newValue is null too, so it normalises to auto — hand control back to
+    // the OS, same as another tab choosing auto.
+    if (e.key === "theme" || e.key === null) {
       setScheme(normalizeMode(e.newValue));
       render();
     }
