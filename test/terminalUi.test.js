@@ -1,12 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import {
-  capLimit,
-  recallHistory,
-  shouldGrabFocus,
-  shouldRefit,
-} from "../js/terminal-ui.js";
+import { capLimit, recallHistory, shouldRefit } from "../js/terminal-ui.js";
 
 test("capLimit drops only the overflow past the cap, never at or below it", () => {
   assert.equal(capLimit(0, 200), 0);
@@ -73,44 +68,6 @@ test("recall round trip restores the live buffer after stepping up and back down
   const down = recallHistory(H, index, buffer, up.value, "down");
   assert.equal(down.index, H.length);
   assert.equal(down.value, typed);
-});
-
-// shouldGrabFocus decides whether a keystroke on the terminal pulls focus into
-// the input. Only a bare printable key with passive focus should.
-const base = {
-  activePassive: true,
-  metaKey: false,
-  ctrlKey: false,
-  altKey: false,
-  altGraph: false,
-  key: "a",
-};
-
-test("a bare printable key with passive focus grabs focus", () => {
-  assert.equal(shouldGrabFocus(base), true);
-});
-
-test("never grabs focus when a real control is focused", () => {
-  assert.equal(shouldGrabFocus({ ...base, activePassive: false }), false);
-});
-
-test("multi-character keys (Enter, Tab, arrows) never grab focus", () => {
-  for (const key of ["Enter", "Tab", "ArrowUp", "Shift", "Escape"]) {
-    assert.equal(shouldGrabFocus({ ...base, key }), false);
-  }
-});
-
-test("editing shortcuts (Ctrl/Meta/Alt combos) never grab focus", () => {
-  assert.equal(shouldGrabFocus({ ...base, metaKey: true }), false);
-  assert.equal(shouldGrabFocus({ ...base, ctrlKey: true }), false);
-  assert.equal(shouldGrabFocus({ ...base, altKey: true }), false);
-});
-
-test("AltGr (Ctrl+Alt) types a character, so it grabs focus", () => {
-  assert.equal(
-    shouldGrabFocus({ ...base, ctrlKey: true, altKey: true, altGraph: true }),
-    true,
-  );
 });
 
 // shouldRefit gates the screen-height re-freeze: only a width change reflows the

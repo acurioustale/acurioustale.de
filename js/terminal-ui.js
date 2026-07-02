@@ -41,25 +41,6 @@ export function recallHistory(entries, index, buffer, current, direction) {
   return null;
 }
 
-// Whether a keydown on the terminal container should pull focus into the input
-// so the first keystroke lands there. True only for a bare printable character
-// (key.length === 1) while focus is "passive" — on nothing in particular, so we
-// never steal it from a real control. Never for editing shortcuts (Ctrl/Meta/Alt
-// combos) so browser combos still work, except AltGr (reported as Ctrl+Alt on
-// Windows), which types real characters on many layouts and so counts as typing.
-export function shouldGrabFocus({
-  activePassive,
-  metaKey,
-  ctrlKey,
-  altKey,
-  altGraph,
-  key,
-}) {
-  if (!activePassive) return false;
-  if (metaKey || ((ctrlKey || altKey) && !altGraph)) return false;
-  return key.length === 1;
-}
-
 // Whether a resize warrants re-freezing the screen height. Only a width change
 // reflows the card and so changes the boot height; a height-only resize leaves
 // the frozen height correct, so it must be a no-op (this guard is the whole
