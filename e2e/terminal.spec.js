@@ -58,6 +58,26 @@ test("clicking the terminal focuses the input", async ({ page }) => {
   await expect(page.locator(".cmd-input")).toBeFocused();
 });
 
+test("clicking to focus keeps the scrollback position", async ({ page }) => {
+  await page.goto("/");
+  const input = page.locator(".cmd-input");
+  for (let i = 0; i < 40; i++) {
+    await input.fill("help");
+    await input.press("Enter");
+  }
+
+  const screen = page.locator(".screen");
+  // Move focus off the input and scroll back up to read earlier output.
+  await input.blur();
+  await screen.evaluate((el) => (el.scrollTop = 0));
+
+  // A plain click (nothing selected, not a link) refocuses the prompt but must
+  // not scroll the frozen viewport back down to it.
+  await screen.click({ position: { x: 5, y: 5 } });
+  await expect(input).toBeFocused();
+  expect(await screen.evaluate((el) => el.scrollTop)).toBeLessThan(5);
+});
+
 test("the theme toggle changes the rendered background colour", async ({
   page,
 }) => {
