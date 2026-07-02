@@ -136,11 +136,22 @@ jobs:
           npm run check:og
 
       # svgo keeps the SVGs optimised; the check fails if either would change.
+      # Write to a temp file rather than piping, so a svgo crash (bad fetch,
+      # config error) is distinguished from a genuinely unoptimised SVG instead
+      # of pipefail turning both into the same misleading message. Mirrors
+      # validate.sh.
       - name: Check SVG optimisation
         run: |
+          out="$RUNNER_TEMP/svgo-out.svg"
           for f in assets/favicon.svg og-image.src.svg; do
-            npx svgo --config svgo.config.mjs -i "$f" -o - | diff -q - "$f" \
-              || { echo "$f is not optimised"; exit 1; }
+            if ! npx svgo --config svgo.config.mjs -i "$f" -o "$out" >/dev/null; then
+              echo "svgo failed to process $f"
+              exit 1
+            fi
+            if ! diff -q "$out" "$f" >/dev/null; then
+              echo "$f is not optimised; run: npx svgo --config svgo.config.mjs $f"
+              exit 1
+            fi
           done
 
   deploy:
